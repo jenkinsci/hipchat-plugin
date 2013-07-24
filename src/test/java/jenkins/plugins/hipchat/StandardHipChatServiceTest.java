@@ -1,7 +1,5 @@
 package jenkins.plugins.hipchat;
 
-import jenkins.plugins.hipchat.StandardHipChatService;
-import org.junit.Before;
 import org.junit.Test;
 
 public class StandardHipChatServiceTest {
