@@ -5,6 +5,7 @@ import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.CauseAction;
 import hudson.model.Result;
+import hudson.model.Run;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.AffectedFile;
 import hudson.scm.ChangeLogSet.Entry;
@@ -64,11 +65,15 @@ public class ActiveNotifier implements FineGrainedNotifier {
         AbstractProject<?, ?> project = r.getProject();
         HipChatNotifier.HipChatJobProperty jobProperty = project.getProperty(HipChatNotifier.HipChatJobProperty.class);
         Result result = r.getResult();
-        if ((result == Result.ABORTED && jobProperty.getNotifyAborted())
+        AbstractBuild<?, ?> previousBuild = project.getLastBuild().getPreviousBuild();
+        Result previousResult = (previousBuild != null) ? previousBuild.getResult() : Result.SUCCESS;
+
+        if (result != null && jobProperty != null && ((result == Result.ABORTED && jobProperty.getNotifyAborted())
                 || (result == Result.FAILURE && jobProperty.getNotifyFailure())
                 || (result == Result.NOT_BUILT && jobProperty.getNotifyNotBuilt())
+                || (result == Result.SUCCESS && previousResult == Result.FAILURE && jobProperty.getNotifyBackToNormal())
                 || (result == Result.SUCCESS && jobProperty.getNotifySuccess())
-                || (result == Result.UNSTABLE && jobProperty.getNotifyUnstable())) {
+                || (result == Result.UNSTABLE && jobProperty.getNotifyUnstable()))) {
             getHipChat(r).publish(getBuildStatusMessage(r), getBuildColor(r));
         }
 
@@ -145,6 +150,9 @@ public class ActiveNotifier implements FineGrainedNotifier {
                 return "Starting...";
             }
             Result result = r.getResult();
+            Run previousBuild = r.getProject().getLastBuild().getPreviousBuild();
+            Result previousResult = (previousBuild != null) ? previousBuild.getResult() : Result.SUCCESS;
+            if (result == Result.SUCCESS && previousResult == Result.FAILURE) return "Back to normal";
             if (result == Result.SUCCESS) return "Success";
             if (result == Result.FAILURE) return "<b>FAILURE</b>";
             if (result == Result.ABORTED) return "ABORTED";
@@ -173,7 +181,30 @@ public class ActiveNotifier implements FineGrainedNotifier {
 
         public MessageBuilder appendOpenLink() {
             String url = notifier.getBuildServerUrl() + build.getUrl();
-            message.append(" (<a href='").append(url).append("'>Open</a>)");
+            message.append(" (<a href='").append(url).append("'>Open</a>)").append(" (<a href='").append(url)
+                    .append("console").append("'>Console</a>)");
+            return this;
+        }
+
+        // TODO decide if we need this...
+        public MessageBuilder appendCommitInfo() {
+            ChangeLogSet changeSet = build.getChangeSet();
+            if (!changeSet.isEmptySet()) {
+                List<Entry> entries = new LinkedList<Entry>();
+                for (Object o : changeSet.getItems()) {
+                    Entry entry = (Entry) o;
+                    entries.add(entry);
+                }
+                String commitAuthor = entries.get((entries.size() - 1)).getAuthor().getDisplayName();
+                String commitMsg = entries.get((entries.size() - 1)).getMsgEscaped();
+                String commitId = entries.get((entries.size() - 1)).getCommitId();
+                message.append(commitAuthor);
+                message.append(": ");
+                message.append(commitMsg);
+                message.append(" (");
+                message.append(commitId.substring(0, 6));
+                message.append(")");
+            }
             return this;
         }
 
