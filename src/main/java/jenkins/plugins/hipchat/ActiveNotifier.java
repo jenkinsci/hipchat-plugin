@@ -4,6 +4,8 @@ import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.CauseAction;
+import hudson.model.ParameterValue;
+import hudson.model.ParametersAction;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.scm.ChangeLogSet;
@@ -176,6 +178,19 @@ public class ActiveNotifier implements FineGrainedNotifier {
             message.append(" - ");
             message.append(build.getDisplayName());
             message.append(" ");
+            if (build.getProject().isParameterized()) {
+                message.append("[");
+                List<String> params = new LinkedList<String>();
+                for (ParametersAction parametersAction : build.getActions(ParametersAction.class)) {
+                    for (ParameterValue parameterValue : parametersAction.getParameters()) {
+                        String name = parameterValue.getName();
+                        String value = parameterValue.createVariableResolver(build).resolve(name);
+                        params.add(name + '=' + value);
+                    }
+                }
+                message.append(StringUtils.join(params, ", "));
+                message.append("] ");
+            }
             return this;
         }
 
