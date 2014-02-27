@@ -12,6 +12,8 @@ import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.AffectedFile;
 import hudson.scm.ChangeLogSet.Entry;
 import hudson.tasks.junit.CaseResult;
+import hudson.tasks.junit.TestResult;
+import hudson.tasks.junit.TestResultAction;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.HashSet;
@@ -23,7 +25,7 @@ import java.util.logging.Logger;
 @SuppressWarnings("rawtypes")
 public class ActiveNotifier implements FineGrainedNotifier {
 
-    private static final Logger logger = Logger.getLogger(HipChatListener.class.getName());
+    private static final Logger logger = Logger.getLogger(ActiveNotifier.class.getName());
 
     HipChatNotifier notifier;
 
@@ -78,6 +80,7 @@ public class ActiveNotifier implements FineGrainedNotifier {
                 || (result == Result.SUCCESS && (previousResult == Result.FAILURE || previousResult == Result.UNSTABLE) && jobProperty.getNotifyBackToNormal())
                 || (result == Result.SUCCESS && jobProperty.getNotifySuccess())
                 || (result == Result.UNSTABLE && jobProperty.getNotifyUnstable()))) {
+
             getHipChat(r).publish(getBuildStatusMessage(r), getBuildColor(r));
         }
 
@@ -120,7 +123,7 @@ public class ActiveNotifier implements FineGrainedNotifier {
             return "green";
         } else if (result == Result.FAILURE) {
             return "red";
-        } else if (result == Result.UNSTABLE && !this.remainCalmUnstable(r)) {
+        } else if (result == Result.UNSTABLE && !remainCalmUnstable(r)) {
             return "red";
         } else {
             return "yellow";
@@ -129,15 +132,26 @@ public class ActiveNotifier implements FineGrainedNotifier {
 
     boolean remainCalmUnstable(AbstractBuild r) {
 
+        boolean remainCalm = true;
+
+        // Get the job property
         AbstractProject<?, ?> project = r.getProject();
         HipChatNotifier.HipChatJobProperty jobProperty = project.getProperty(HipChatNotifier.HipChatJobProperty.class);
 
-        boolean remainCalm = true;
-        for (CaseResult res : r.getAggregatedTestResultAction().getFailedTests()) {
-            if (res.getAge() > jobProperty.getCalmUnstableAgeLimit()) {
-                remainCalm = false;
-                break;
+        // If there exists associated aggregated result action
+        if (r.getAction(TestResultAction.class) != null) {
+            TestResult tr = r.getAction(TestResultAction.class).getResult();
+
+            logger.info("Number of Failed Cases: " + Integer.toString(tr.getFailCount()));
+            for (CaseResult res : tr.getFailedTests()) {
+                if (res.getAge() > jobProperty.getCalmUnstableAgeLimit()) {
+                    remainCalm = false;
+                    break;
+                }
             }
+        } else { // If none test result is associated
+            logger.info("There is no associated test result with current build!");
+            return remainCalm;
         }
         return remainCalm;
     }
