@@ -124,12 +124,18 @@ public class ActiveNotifier implements FineGrainedNotifier {
         } else if (result == Result.FAILURE) {
             return "red";
         } else if (result == Result.UNSTABLE && !remainCalmUnstable(r)) {
-            return "red";
+            return "red"; // If unstable notifier needs to shout louder, then red, otherwise remain yellow
         } else {
             return "yellow";
         }
     }
 
+    /**
+     * Decides whether the unstable notifier should stay calm by inspecting the age of all failed tests, if any age
+     * exceeds the preset age limit, then unstable notifier should shout louder, otherwise just remain calm
+     * @param r the abstract build
+     * @return  boolean result indicating whether the notifier should stay calm
+     */
     boolean remainCalmUnstable(AbstractBuild r) {
 
         boolean remainCalm = true;
@@ -138,7 +144,7 @@ public class ActiveNotifier implements FineGrainedNotifier {
         AbstractProject<?, ?> project = r.getProject();
         HipChatNotifier.HipChatJobProperty jobProperty = project.getProperty(HipChatNotifier.HipChatJobProperty.class);
 
-        // If there exists associated aggregated result action
+        // If there exists associated test results
         if (r.getAction(TestResultAction.class) != null) {
             TestResult tr = r.getAction(TestResultAction.class).getResult();
 
