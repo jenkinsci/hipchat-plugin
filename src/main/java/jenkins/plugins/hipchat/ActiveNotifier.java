@@ -11,6 +11,9 @@ import hudson.model.Run;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.AffectedFile;
 import hudson.scm.ChangeLogSet.Entry;
+import hudson.tasks.junit.CaseResult;
+import hudson.tasks.junit.TestResult;
+import hudson.tasks.junit.TestResultAction;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.HashSet;
@@ -22,7 +25,7 @@ import java.util.logging.Logger;
 @SuppressWarnings("rawtypes")
 public class ActiveNotifier implements FineGrainedNotifier {
 
-    private static final Logger logger = Logger.getLogger(HipChatListener.class.getName());
+    private static final Logger logger = Logger.getLogger(ActiveNotifier.class.getName());
 
     HipChatNotifier notifier;
 
@@ -38,6 +41,7 @@ public class ActiveNotifier implements FineGrainedNotifier {
     }
 
     public void deleted(AbstractBuild r) {
+
     }
 
     public void started(AbstractBuild build) {
@@ -73,9 +77,10 @@ public class ActiveNotifier implements FineGrainedNotifier {
         if (result != null && jobProperty != null && ((result == Result.ABORTED && jobProperty.getNotifyAborted())
                 || (result == Result.FAILURE && jobProperty.getNotifyFailure())
                 || (result == Result.NOT_BUILT && jobProperty.getNotifyNotBuilt())
-                || (result == Result.SUCCESS && (previousResult == Result.FAILURE || previousResult == Result.UNSTABLE)&& jobProperty.getNotifyBackToNormal())
+                || (result == Result.SUCCESS && (previousResult == Result.FAILURE || previousResult == Result.UNSTABLE) && jobProperty.getNotifyBackToNormal())
                 || (result == Result.SUCCESS && jobProperty.getNotifySuccess())
                 || (result == Result.UNSTABLE && jobProperty.getNotifyUnstable()))) {
+
             getHipChat(r).publish(getBuildStatusMessage(r), getBuildColor(r));
         }
 
@@ -112,15 +117,49 @@ public class ActiveNotifier implements FineGrainedNotifier {
         return message.appendOpenLink().toString();
     }
 
-    static String getBuildColor(AbstractBuild r) {
+    String getBuildColor(AbstractBuild r) {
         Result result = r.getResult();
         if (result == Result.SUCCESS) {
             return "green";
         } else if (result == Result.FAILURE) {
             return "red";
+        } else if (result == Result.UNSTABLE && !remainCalmUnstable(r)) {
+            return "red"; // If unstable notifier needs to shout louder, then red, otherwise remain yellow
         } else {
             return "yellow";
         }
+    }
+
+    /**
+     * Decides whether the unstable notifier should stay calm by inspecting the age of all failed tests, if any age
+     * exceeds the preset age limit, then unstable notifier should shout louder, otherwise just remain calm
+     * @param r the abstract build
+     * @return  boolean result indicating whether the notifier should stay calm
+     */
+    boolean remainCalmUnstable(AbstractBuild r) {
+
+        boolean remainCalm = true;
+
+        // Get the job property
+        AbstractProject<?, ?> project = r.getProject();
+        HipChatNotifier.HipChatJobProperty jobProperty = project.getProperty(HipChatNotifier.HipChatJobProperty.class);
+
+        // If there exists associated test results
+        if (r.getAction(TestResultAction.class) != null) {
+            TestResult tr = r.getAction(TestResultAction.class).getResult();
+
+            logger.info("Number of Failed Cases: " + Integer.toString(tr.getFailCount()));
+            for (CaseResult res : tr.getFailedTests()) {
+                if (res.getAge() > jobProperty.getCalmUnstableAgeLimit()) {
+                    remainCalm = false;
+                    break;
+                }
+            }
+        } else { // If none test result is associated
+            logger.info("There is no associated test result with current build!");
+            remainCalm = true;
+        }
+        return remainCalm;
     }
 
     String getBuildStatusMessage(AbstractBuild r) {
