@@ -55,5 +55,4 @@ public class HipChatListener extends RunListener<AbstractBuild> {
         }
         return new DisabledNotifier();
     }
-
 }

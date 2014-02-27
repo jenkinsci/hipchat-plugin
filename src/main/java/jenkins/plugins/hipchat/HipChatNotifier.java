@@ -157,10 +157,19 @@ public class HipChatNotifier extends Notifier {
         private boolean notifyNotBuilt;
         private boolean notifyUnstable;
         private boolean notifyFailure;
-
+        private boolean notifyBackToNormal;
+        private int calmUnstableAgeLimit;
 
         @DataBoundConstructor
-        public HipChatJobProperty(String room, boolean startNotification, boolean notifyAborted, boolean notifyFailure, boolean notifyNotBuilt, boolean notifySuccess, boolean notifyUnstable) {
+        public HipChatJobProperty(String room,
+                                  boolean startNotification,
+                                  boolean notifyAborted,
+                                  boolean notifyFailure,
+                                  boolean notifyNotBuilt,
+                                  boolean notifySuccess,
+                                  boolean notifyUnstable,
+                                  boolean notifyBackToNormal,
+                                  String calmUnstableAgeLimit) throws hudson.model.Descriptor.FormException {
             this.room = room;
             this.startNotification = startNotification;
             this.notifyAborted = notifyAborted;
@@ -168,6 +177,12 @@ public class HipChatNotifier extends Notifier {
             this.notifyNotBuilt = notifyNotBuilt;
             this.notifySuccess = notifySuccess;
             this.notifyUnstable = notifyUnstable;
+            this.notifyBackToNormal = notifyBackToNormal;
+            try {
+                this.calmUnstableAgeLimit = Integer.parseInt(calmUnstableAgeLimit);
+            } catch (NumberFormatException e) {
+                throw new hudson.model.Descriptor.FormException(e, "hipChatCalmUnstableAgeLimit");
+            }
         }
 
         @Exported
@@ -219,6 +234,14 @@ public class HipChatNotifier extends Notifier {
             return notifyUnstable;
         }
 
+        @Exported
+        public boolean getNotifyBackToNormal() {
+            return notifyBackToNormal;
+        }
+
+        @Exported
+        public int getCalmUnstableAgeLimit() { return calmUnstableAgeLimit; }
+
         @Extension
         public static final class DescriptorImpl extends JobPropertyDescriptor {
             public String getDisplayName() {
@@ -238,7 +261,9 @@ public class HipChatNotifier extends Notifier {
                         sr.getParameter("hipChatNotifyFailure") != null,
                         sr.getParameter("hipChatNotifyNotBuilt") != null,
                         sr.getParameter("hipChatNotifySuccess") != null,
-                        sr.getParameter("hipChatNotifyUnstable") != null);
+                        sr.getParameter("hipChatNotifyUnstable") != null,
+                        sr.getParameter("hipChatNotifyBackToNormal") != null,
+                        sr.getParameter("hipChatCalmUnstableAgeLimit"));
             }
         }
     }

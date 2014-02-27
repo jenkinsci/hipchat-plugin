@@ -19,11 +19,11 @@
 
     <!-- keeping original groupId -->
     <groupId>org.jvnet.hudson.plugins</groupId>
-	<artifactId>hipchat</artifactId>
+	<artifactId>hipchat-blacklocus</artifactId>
 	<packaging>hpi</packaging>
-	<version>0.1.5-SNAPSHOT</version>
-	<name>Jenkins HipChat Plugin</name>
-	<description>A Build status publisher that notifies channels on a HipChat server</description>
+	<version>0.1.5.1-SNAPSHOT</version>
+	<name>Jenkins HipChat Plugin BlackLocus Edition</name>
+	<description>A Build status publisher that notifies channels on a HipChat server, with some added goodies</description>
     <url>http://wiki.jenkins-ci.org/display/JENKINS/HipChat+Plugin</url>
 
     <properties>

@@ -4,3 +4,6 @@ target
 .settings
 bin
 work
+.idea
+*.iml
+.DS_Store
