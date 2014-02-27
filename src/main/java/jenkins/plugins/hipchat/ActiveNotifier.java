@@ -151,7 +151,7 @@ public class ActiveNotifier implements FineGrainedNotifier {
             }
         } else { // If none test result is associated
             logger.info("There is no associated test result with current build!");
-            return remainCalm;
+            remainCalm = true;
         }
         return remainCalm;
     }
