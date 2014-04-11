@@ -34,7 +34,7 @@
         </f:entry>
 
         <f:entry title="Age Limit On Failed Test" help="${rootURL}/plugin/hipchat-blacklocus/help-projectConfig-hipChatTestResultAgeLimit.html">
-            <f:textbox name="hipChatCalmUnstableAgeLimit" value="${instance.getCalmUnstableAgeLimit()}" default="7"/>
+            <f:textbox name="hipChatCalmUnstableAgeLimit" value="${instance.getCalmUnstableAgeLimit()}" default="0"/>
         </f:entry>
 
 
