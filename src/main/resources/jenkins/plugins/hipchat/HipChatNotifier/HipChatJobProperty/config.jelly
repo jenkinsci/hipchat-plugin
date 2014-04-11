@@ -29,6 +29,15 @@
             <f:checkbox name="hipChatNotifyUnstable" value="true" checked="${instance.getNotifyUnstable()}"/>
         </f:entry>
 
+        <f:entry title="Notify Back To Normal">
+            <f:checkbox name="hipChatNotifyBackToNormal" value="true" checked="${instance.getNotifyBackToNormal()}"/>
+        </f:entry>
+
+        <f:entry title="Age Limit On Failed Test" help="${rootURL}/plugin/hipchat-blacklocus/help-projectConfig-hipChatTestResultAgeLimit.html">
+            <f:textbox name="hipChatCalmUnstableAgeLimit" value="${instance.getCalmUnstableAgeLimit()}" default="0"/>
+        </f:entry>
+
+
     </f:section>
 
 </j:jelly>
