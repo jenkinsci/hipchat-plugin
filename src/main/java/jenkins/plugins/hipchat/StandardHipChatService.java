@@ -21,7 +21,7 @@ public class StandardHipChatService implements HipChatService {
 
     public StandardHipChatService(String host, String token, String roomId, String from) {
         super();
-	this.host = host;
+        this.host = host;
         this.token = token;
         this.roomIds = roomId.split(",");
         this.from = from;
