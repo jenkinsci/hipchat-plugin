@@ -34,7 +34,7 @@ public class HipChatNotifier extends Notifier {
     }
 
     public String getServer() {
-	return this.server;
+        return this.server;
     }
 
     public String getRoom() {
@@ -57,7 +57,7 @@ public class HipChatNotifier extends Notifier {
     @DataBoundConstructor
     public HipChatNotifier(final String server, final String authToken, final String room, String buildServerUrl, final String sendAs) {
         super();
-	this.server = server;
+        this.server = server;
         this.authToken = authToken;
         this.buildServerUrl = buildServerUrl;
         this.room = room;
@@ -79,7 +79,7 @@ public class HipChatNotifier extends Notifier {
 
     @Extension
     public static class DescriptorImpl extends BuildStepDescriptor<Publisher> {
-	private String server;
+        private String server;
         private String token;
         private String room;
         private String buildServerUrl;
@@ -89,9 +89,9 @@ public class HipChatNotifier extends Notifier {
             load();
         }
 
-	public String getServer() {
-	    return server;
-	}
+        public String getServer() {
+            return server;
+        }
 
         public String getToken() {
             return token;
@@ -115,7 +115,7 @@ public class HipChatNotifier extends Notifier {
 
         @Override
         public HipChatNotifier newInstance(StaplerRequest sr) {
-	    if (server == null) server = sr.getParameter("hipChatServer");
+            if (server == null) server = sr.getParameter("hipChatServer");
             if (token == null) token = sr.getParameter("hipChatToken");
             if (buildServerUrl == null) buildServerUrl = sr.getParameter("hipChatBuildServerUrl");
             if (room == null) room = sr.getParameter("hipChatRoom");
@@ -125,7 +125,7 @@ public class HipChatNotifier extends Notifier {
 
         @Override
         public boolean configure(StaplerRequest sr, JSONObject formData) throws FormException {
-	    server = sr.getParameter("hipChatServer");
+            server = sr.getParameter("hipChatServer");
             token = sr.getParameter("hipChatToken");
             room = sr.getParameter("hipChatRoom");
             buildServerUrl = sr.getParameter("hipChatBuildServerUrl");
