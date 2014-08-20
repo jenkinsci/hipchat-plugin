@@ -14,13 +14,14 @@ public class StandardHipChatService implements HipChatService {
 
     private static final Logger logger = Logger.getLogger(StandardHipChatService.class.getName());
 
-    private String host = "api.hipchat.com";
+    private String host;
     private String token;
     private String[] roomIds;
     private String from;
 
-    public StandardHipChatService(String token, String roomId, String from) {
+    public StandardHipChatService(String host, String token, String roomId, String from) {
         super();
+	this.host = host;
         this.token = token;
         this.roomIds = roomId.split(",");
         this.from = from;
