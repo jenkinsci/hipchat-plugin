@@ -85,7 +85,7 @@ public class StandardHipChatService implements HipChatService {
             logger.info("No rooms were configured for this job, so no notifications were sent.");
         }
     }
-    
+
     private HttpClient getHttpClient() {
         HttpClient client = new HttpClient();
         if (Jenkins.getInstance() != null) {
