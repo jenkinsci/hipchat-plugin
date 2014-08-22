@@ -14,17 +14,38 @@ public class StandardHipChatService implements HipChatService {
 
     private static final Logger logger = Logger.getLogger(StandardHipChatService.class.getName());
 
-    private String host;
+    /*
+     * We want a default value for the hostname to point to the standard
+     * HipChat server to ensure that people don't have to reconfigure
+     * their Jenkins instances to retain default behavior.
+     */
+    private String host = "api.hipchat.com";
     private String token;
     private String[] roomIds;
-    private String from;
+    // Setting a default value for the from user.
+    private String from = "Build Server";
 
     public StandardHipChatService(String host, String token, String roomId, String from) {
         super();
-        this.host = host;
+        // Check for null value to avoid overwriting the default
+        if (host != null) {
+            this.host = host;
+        }
         this.token = token;
-        this.roomIds = roomId.split(",");
-        this.from = from;
+        //
+        // If roomId is left blank let's make it an empty string array to
+        // avoid throwing a nasty NullPointerException during job run if this
+        // is unset.
+        //
+        if (roomId != null) {
+            this.roomIds = roomId.split(",");
+        } else {
+            this.roomIds = new String[0];
+        }
+        // Check for null value to avoid overwriting the default
+        if (from != null) {
+            this.from = from;
+        }
     }
 
     public void publish(String message) {
@@ -32,6 +53,7 @@ public class StandardHipChatService implements HipChatService {
     }
 
     public void publish(String message, String color) {
+        logger.info("HipChat notifications will be sent to HipChat server: " + host);
         for (String roomId : roomIds) {
             logger.info("Posting: " + from + " to " + roomId + ": " + message + " " + color);
             HttpClient client = getHttpClient();
@@ -56,6 +78,12 @@ public class StandardHipChatService implements HipChatService {
                 post.releaseConnection();
             }
         }
+        //
+        // Let's print out a message letting people know the roomIds were blank just to avoid confusion
+        //
+        if (roomIds.length <= 0) {
+            logger.info("No rooms were configured for this job, so no notifications were sent.");
+        }
     }
     
     private HttpClient getHttpClient() {
@@ -74,6 +102,8 @@ public class StandardHipChatService implements HipChatService {
     }
 
     void setHost(String host) {
-        this.host = host;
+        if (host != null) {
+            this.host = host;
+        }
     }
 }
