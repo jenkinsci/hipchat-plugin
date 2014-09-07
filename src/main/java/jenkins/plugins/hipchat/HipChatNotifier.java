@@ -22,6 +22,7 @@ public class HipChatNotifier extends Notifier {
 
     private static final Logger logger = Logger.getLogger(HipChatNotifier.class.getName());
 
+    private Boolean v2API;
     private String server;
     private String authToken;
     private String buildServerUrl;
@@ -53,15 +54,19 @@ public class HipChatNotifier extends Notifier {
         return this.sendAs;
     }
 
+    public Boolean isV2API() {
+        return v2API;
+    }
 
     @DataBoundConstructor
-    public HipChatNotifier(final String server, final String authToken, final String room, String buildServerUrl, final String sendAs) {
+    public HipChatNotifier(final String server, final String authToken, final String room, String buildServerUrl, final String sendAs, final boolean v2API) {
         super();
         this.server = server;
         this.authToken = authToken;
         this.buildServerUrl = buildServerUrl;
         this.room = room;
         this.sendAs = sendAs;
+        this.v2API = v2API;
     }
 
     public BuildStepMonitor getRequiredMonitorService() {
@@ -69,7 +74,7 @@ public class HipChatNotifier extends Notifier {
     }
 
     public HipChatService newHipChatService(final String room) {
-        return new StandardHipChatService(getServer(), getAuthToken(), room == null ? getRoom() : room, StringUtils.isBlank(getSendAs()) ? "Build Server" : getSendAs());
+        return new StandardHipChatService(getServer(), getAuthToken(), room == null ? getRoom() : room, StringUtils.isBlank(getSendAs()) ? "Build Server" : getSendAs(), isV2API());
     }
 
     @Override
@@ -84,6 +89,7 @@ public class HipChatNotifier extends Notifier {
         private String room;
         private String buildServerUrl;
         private String sendAs;
+        private Boolean v2API;
 
         public DescriptorImpl() {
             load();
@@ -109,6 +115,10 @@ public class HipChatNotifier extends Notifier {
             return sendAs;
         }
 
+        public Boolean getV2API() {
+            return v2API;
+        }
+
         public boolean isApplicable(Class<? extends AbstractProject> aClass) {
             return true;
         }
@@ -120,7 +130,8 @@ public class HipChatNotifier extends Notifier {
             if (buildServerUrl == null) buildServerUrl = sr.getParameter("hipChatBuildServerUrl");
             if (room == null) room = sr.getParameter("hipChatRoom");
             if (sendAs == null) sendAs = sr.getParameter("hipChatSendAs");
-            return new HipChatNotifier(server, token, room, buildServerUrl, sendAs);
+            if (v2API == null) v2API = Boolean.valueOf(sr.getParameter("hipChatAPIV2")).booleanValue();
+            return new HipChatNotifier(server, token, room, buildServerUrl, sendAs, v2API);
         }
 
         @Override
@@ -130,11 +141,12 @@ public class HipChatNotifier extends Notifier {
             room = sr.getParameter("hipChatRoom");
             buildServerUrl = sr.getParameter("hipChatBuildServerUrl");
             sendAs = sr.getParameter("hipChatSendAs");
+            v2API = Boolean.valueOf(sr.getParameter("hipChatAPIV2"));
             if (buildServerUrl != null && !buildServerUrl.endsWith("/")) {
                 buildServerUrl = buildServerUrl + "/";
             }
             try {
-                new HipChatNotifier(server, token, room, buildServerUrl, sendAs);
+                new HipChatNotifier(server, token, room, buildServerUrl, sendAs, v2API);
             } catch (Exception e) {
                 throw new FormException("Failed to initialize notifier - check your global notifier configuration settings", e, "");
             }
