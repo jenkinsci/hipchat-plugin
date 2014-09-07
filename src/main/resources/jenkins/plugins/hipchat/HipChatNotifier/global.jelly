@@ -17,6 +17,7 @@
     </f:entry>
     <f:entry title="API Token" help="${rootURL}/plugin/hipchat/help-globalConfig-hipChatToken.html">
         <f:textbox name="hipChatToken" value="${descriptor.getToken()}" />
+        <f:checkbox name="hipChatAPIV2" title="API Token uses v2 of the hipchat API" value="true" checked="${descriptor.isV2API()}" />
     </f:entry>
     <f:entry title="Room" help="${rootURL}/plugin/hipchat/help-globalConfig-hipChatRoom.html">
         <f:textbox name="hipChatRoom" value="${descriptor.getRoom()}" />
