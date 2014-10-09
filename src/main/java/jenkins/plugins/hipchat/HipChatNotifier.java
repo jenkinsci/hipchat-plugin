@@ -150,6 +150,7 @@ public class HipChatNotifier extends Notifier {
 
     public static class HipChatJobProperty extends hudson.model.JobProperty<AbstractProject<?, ?>> {
         private String room;
+        private boolean consoleLink;
         private boolean startNotification;
         private boolean notifySuccess;
         private boolean notifyAborted;
@@ -161,6 +162,7 @@ public class HipChatNotifier extends Notifier {
 
         @DataBoundConstructor
         public HipChatJobProperty(String room,
+                                  boolean consoleLink,
                                   boolean startNotification,
                                   boolean notifyAborted,
                                   boolean notifyFailure,
@@ -169,6 +171,7 @@ public class HipChatNotifier extends Notifier {
                                   boolean notifyUnstable,
                                   boolean notifyBackToNormal) {
             this.room = room;
+            this.consoleLink = consoleLink;
             this.startNotification = startNotification;
             this.notifyAborted = notifyAborted;
             this.notifyFailure = notifyFailure;
@@ -181,6 +184,11 @@ public class HipChatNotifier extends Notifier {
         @Exported
         public String getRoom() {
             return room;
+        }
+
+        @Exported
+        public boolean getConsoleLink() {
+            return consoleLink;
         }
 
         @Exported
@@ -246,6 +254,7 @@ public class HipChatNotifier extends Notifier {
             @Override
             public HipChatJobProperty newInstance(StaplerRequest sr, JSONObject formData) throws hudson.model.Descriptor.FormException {
                 return new HipChatJobProperty(sr.getParameter("hipChatProjectRoom"),
+                        sr.getParameter("hipChatConsoleLink") != null,
                         sr.getParameter("hipChatStartNotification") != null,
                         sr.getParameter("hipChatNotifyAborted") != null,
                         sr.getParameter("hipChatNotifyFailure") != null,
