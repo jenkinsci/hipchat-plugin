@@ -2,6 +2,7 @@ package jenkins.plugins.hipchat;
 
 import hudson.Util;
 import hudson.model.*;
+import hudson.tasks.test.*;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.AffectedFile;
 import hudson.scm.ChangeLogSet.Entry;
@@ -120,9 +121,20 @@ public class ActiveNotifier implements FineGrainedNotifier {
     }
 
     String getBuildStatusMessage(AbstractBuild r) {
+        AbstractProject<?, ?> project = r.getProject();
+        HipChatNotifier.HipChatJobProperty jobProperty = project.getProperty(HipChatNotifier.HipChatJobProperty.class);
         MessageBuilder message = new MessageBuilder(notifier, r);
-        message.appendStatusMessage();
+
+        if (jobProperty.getFailureCount() && (message.build.getResult() == Result.FAILURE)) {
+            message.appendFailureCount();
+            message.startMessage();
+        }else{
+            message.startMessage();
+            message.appendStatusMessage();
+        }
+
         message.appendDuration();
+
         return message.appendOpenLink().toString();
     }
 
@@ -135,7 +147,6 @@ public class ActiveNotifier implements FineGrainedNotifier {
             this.notifier = notifier;
             this.message = new StringBuffer();
             this.build = build;
-            startMessage();
         }
 
         public MessageBuilder appendStatusMessage() {
@@ -186,6 +197,22 @@ public class ActiveNotifier implements FineGrainedNotifier {
         public MessageBuilder appendDuration() {
             message.append(" after ");
             message.append(build.getDurationString());
+            return this;
+        }
+
+        public MessageBuilder appendFailureCount() {
+            try{
+                Integer totalCount = build.getAction(AbstractTestResultAction.class).getTotalCount();
+                Integer failCount = build.getAction(AbstractTestResultAction.class).getFailCount();
+
+                message.append("<b>" + failCount + "</b>" + " out of " + "<b>" + totalCount + "</b>" + " failed");
+                message.append(" in ");
+            }
+            catch (Exception e){
+                logger.info("Unable to get test results!");
+                message.append("MISSING ");
+            }
+
             return this;
         }
 

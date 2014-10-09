@@ -1,0 +1,5 @@
+<div>
+  <p>
+    To get jenkins to include failure count in hipchat failure notifications, you have to make sure that "http://<jenkinsHost>/job/<YourJobName>/<JobID>/testReport/api/json?pretty=true" includes "failCount". If "failCount" is not present, add a post build action "Publish JUnit test results report".
+  </p>
+</div>
