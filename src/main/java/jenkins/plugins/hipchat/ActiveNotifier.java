@@ -1,20 +1,13 @@
 package jenkins.plugins.hipchat;
 
-import hudson.Util;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
-import hudson.model.CauseAction;
-import hudson.model.Result;
-import hudson.model.Run;
+import hudson.model.*;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.AffectedFile;
 import hudson.scm.ChangeLogSet.Entry;
+import hudson.tasks.Mailer;
 import org.apache.commons.lang.StringUtils;
 
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.model.Jenkins;
@@ -31,7 +24,7 @@ public class ActiveNotifier implements FineGrainedNotifier {
         this.notifier = notifier;
     }
 
-    private HipChatService getHipChat(AbstractBuild r) {
+    private HipChatService getHipChat() {
         return notifier.newHipChatService();
     }
 
@@ -54,7 +47,7 @@ public class ActiveNotifier implements FineGrainedNotifier {
     }
 
     private void notifyStart(AbstractBuild build, String message) {
-        getHipChat(build).publish(message, "green");
+        getHipChat().publish(message, "green");
     }
 
     public void finalized(AbstractBuild r) {
@@ -71,8 +64,23 @@ public class ActiveNotifier implements FineGrainedNotifier {
                 || (result == Result.SUCCESS && previousResult == Result.FAILURE && notifier.isNotifyBackToNormal())
                 || (result == Result.SUCCESS && notifier.isNotifySuccess())
                 || (result == Result.UNSTABLE && notifier.isNotifyUnstable())) {
-            getHipChat(r).publish(getBuildStatusMessage(r), getBuildColor(r));
+            List<String> culpritsInHipchat = getCulpritsInHipchat(r);
+            getHipChat().publish(getBuildStatusMessage(r, culpritsInHipchat), getBuildColor(r));
         }
+    }
+
+    private List<String> getCulpritsInHipchat(AbstractBuild r) {
+        List<String> hipchatUsernames = new ArrayList<String>();
+        for(Object userObj : r.getCulprits()) {
+            User user = (User)userObj;
+            Mailer.UserProperty mailProperty = (user).getProperty(Mailer.UserProperty.class);
+            if(mailProperty != null && !StringUtils.isEmpty(mailProperty.getAddress())) {
+                hipchatUsernames.add("@"+getHipChat().getMentionNameForEmail(mailProperty.getAddress()));
+            }else{
+                hipchatUsernames.add(user.getFullName());
+            }
+        }
+        return hipchatUsernames;
     }
 
     String getChanges(AbstractBuild r) {
@@ -122,10 +130,11 @@ public class ActiveNotifier implements FineGrainedNotifier {
         }
     }
 
-    String getBuildStatusMessage(AbstractBuild r) {
+    String getBuildStatusMessage(AbstractBuild r, List<String> culpritsInHipchat) {
         MessageBuilder message = new MessageBuilder(r);
         message.appendStatusMessage();
         message.appendDuration();
+        message.appendCulprits(culpritsInHipchat);
         return message.appendOpenLink().toString();
     }
 
@@ -188,6 +197,24 @@ public class ActiveNotifier implements FineGrainedNotifier {
             message.append(" after ");
             message.append(build.getDurationString());
             return this;
+        }
+
+        public MessageBuilder appendCulprits(List<String> culprits) {
+            for(String hipchatUsername : culprits) {
+                message.append(hipchatUsername);
+                message.append(" ");
+            }
+            return this;
+        }
+
+        private String getEmailOrFullNameForUser(User user, HipChatService hipChat) {
+            Mailer.UserProperty email = user.getProperty(Mailer.UserProperty.class);
+            if(email != null && !StringUtils.isEmpty(email.getAddress()
+            )){
+                return hipChat.getMentionNameForEmail(email.getAddress());
+            }else{
+                return user.getFullName();
+            }
         }
 
         @Override

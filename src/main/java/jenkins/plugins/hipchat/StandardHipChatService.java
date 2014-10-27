@@ -58,6 +58,11 @@ public class StandardHipChatService implements HipChatService {
         }
     }
 
+    public String getMentionNameForEmail(String email) {
+        //TODO: Ralph to implement here
+        return null;
+    }
+
     private HttpClient getHttpClient() {
         HttpClient client = new HttpClient();
 
