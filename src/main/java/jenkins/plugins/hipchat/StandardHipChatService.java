@@ -2,8 +2,12 @@ package jenkins.plugins.hipchat;
 
 import hudson.ProxyConfiguration;
 import jenkins.model.Jenkins;
+import net.sf.json.JSONObject;
+
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.NameValuePair;
+import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 
 import java.util.logging.Level;
@@ -59,8 +63,28 @@ public class StandardHipChatService implements HipChatService {
     }
 
     public String getMentionNameForEmail(String email) {
-        //TODO: Ralph to implement here
-        return null;
+        HttpClient client = getHttpClient();
+        String url = "https://" + server + "/v1/users/show";
+        GetMethod get = new GetMethod(url);
+        get.setQueryString(new NameValuePair[] {
+            new NameValuePair("user_id", email),
+            new NameValuePair("auth_token", token)
+        });
+
+        try {
+            int responseCode = client.executeMethod(get);
+            if (responseCode == HttpStatus.SC_OK) {
+                return parseMentionNameFromUserResponse(get.getResponseBodyAsString());
+            } else {
+                logger.log(Level.WARNING, "HipChat user lookup has failed with error: {0}", get.getResponseBodyAsString());
+                return null;
+            }
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Error looking up user from HipChat", e);
+            return null;
+        } finally {
+            get.releaseConnection();
+        }
     }
 
     private HttpClient getHttpClient() {
@@ -79,6 +103,10 @@ public class StandardHipChatService implements HipChatService {
 
     private String shouldNotify(String color) {
         return color.equalsIgnoreCase("green") ? "0" : "1";
+    }
+
+    private String parseMentionNameFromUserResponse(String response) {
+        return JSONObject.fromObject(response).getJSONObject("user").getString("mention_name");
     }
 
     public String getServer() {
