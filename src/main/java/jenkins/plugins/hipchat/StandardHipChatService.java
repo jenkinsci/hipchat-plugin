@@ -18,17 +18,23 @@ public class StandardHipChatService implements HipChatService {
     private static final Logger logger = Logger.getLogger(StandardHipChatService.class.getName());
     private static final String[] DEFAULT_ROOMS = new String[0];
 
+    private final HttpClient httpClient;
     private final String server;
     private final String token;
     private final String[] roomIds;
     private final String sendAs;
 
-    public StandardHipChatService(String server, String token, String roomIds, String sendAs) {
+    StandardHipChatService(HttpClient httpClient, String server, String token, String roomIds, String sendAs) {
         super();
+        this.httpClient = httpClient;
         this.server = server;
         this.token = token;
         this.roomIds = roomIds == null ? DEFAULT_ROOMS : roomIds.split("\\s*,\\s*");
         this.sendAs = sendAs;
+    }
+
+    public StandardHipChatService(String server, String token, String roomIds, String sendAs) {
+        this(null, server, token, roomIds, sendAs);
     }
 
     public void publish(String message) {
@@ -88,17 +94,21 @@ public class StandardHipChatService implements HipChatService {
     }
 
     private HttpClient getHttpClient() {
-        HttpClient client = new HttpClient();
-
-        if (Jenkins.getInstance() != null) {
-            ProxyConfiguration proxy = Jenkins.getInstance().proxy;
-
-            if (proxy != null) {
-                client.getHostConfiguration().setProxy(proxy.name, proxy.port);
+        if (httpClient != null) {
+            return httpClient;
+        } else {
+            HttpClient client = new HttpClient();
+    
+            if (Jenkins.getInstance() != null) {
+                ProxyConfiguration proxy = Jenkins.getInstance().proxy;
+    
+                if (proxy != null) {
+                    client.getHostConfiguration().setProxy(proxy.name, proxy.port);
+                }
             }
+    
+            return client;
         }
-
-        return client;
     }
 
     private String shouldNotify(String color) {
