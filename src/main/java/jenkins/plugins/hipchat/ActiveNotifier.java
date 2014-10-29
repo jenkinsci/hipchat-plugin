@@ -42,7 +42,7 @@ public class ActiveNotifier implements FineGrainedNotifier {
             message.append(cause.getShortDescription());
             notifyStart(build, message.appendOpenLink().toString());
         } else {
-            notifyStart(build, getBuildStatusMessage(build));
+            notifyStart(build, getBuildStatusMessage(build, null));
         }
     }
 
@@ -74,7 +74,9 @@ public class ActiveNotifier implements FineGrainedNotifier {
         for(Object userObj : r.getCulprits()) {
             User user = (User)userObj;
             Mailer.UserProperty mailProperty = (user).getProperty(Mailer.UserProperty.class);
+            logger.log(Level.SEVERE, "Getting email for "+user.getFullName());
             if(mailProperty != null && !StringUtils.isEmpty(mailProperty.getAddress())) {
+                logger.log(Level.SEVERE, "It's "+mailProperty.getAddress());
                 hipchatUsernames.add("@"+getHipChat().getMentionNameForEmail(mailProperty.getAddress()));
             }else{
                 hipchatUsernames.add(user.getFullName());
@@ -200,9 +202,12 @@ public class ActiveNotifier implements FineGrainedNotifier {
         }
 
         public MessageBuilder appendCulprits(List<String> culprits) {
-            for(String hipchatUsername : culprits) {
-                message.append(hipchatUsername);
-                message.append(" ");
+            if(culprits != null && culprits.size()>0) {
+                message.append(" Committers: ");
+                for (String hipchatUsername : culprits) {
+                    message.append(hipchatUsername);
+                    message.append(" ");
+                }
             }
             return this;
         }
