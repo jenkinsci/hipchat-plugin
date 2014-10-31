@@ -33,7 +33,7 @@
             <f:checkbox name="hipchat.notifyBackToNormal" checked="${instance.notifyBackToNormal}" />
         </f:entry>
 
-        <f:entry title="${%Notify Include Culprits}">
+        <f:entry title="${%Notification to Include Culprits}">
             <f:checkbox name="hipchat.includeCulprits" checked="${instance.includeCulprits}" />
         </f:entry>
     </f:section>
