@@ -37,10 +37,12 @@ public class HipChatNotifier extends Notifier {
     private boolean notifyUnstable;
     private boolean notifyFailure;
     private boolean notifyBackToNormal;
+    private boolean includeCulprits;
 
     @DataBoundConstructor
     public HipChatNotifier(String room, boolean startNotification, boolean notifySuccess, boolean notifyAborted,
-            boolean notifyNotBuilt, boolean notifyUnstable, boolean notifyFailure, boolean notifyBackToNormal) {
+            boolean notifyNotBuilt, boolean notifyUnstable, boolean notifyFailure, boolean notifyBackToNormal,
+            boolean includeCulprits) {
         this.room = room;
         this.startNotification = startNotification;
         this.notifySuccess = notifySuccess;
@@ -49,6 +51,7 @@ public class HipChatNotifier extends Notifier {
         this.notifyUnstable = notifyUnstable;
         this.notifyFailure = notifyFailure;
         this.notifyBackToNormal = notifyBackToNormal;
+        this.includeCulprits = includeCulprits;
     }
 
     public boolean isStartNotification() {
@@ -105,6 +108,14 @@ public class HipChatNotifier extends Notifier {
 
     public void setNotifyBackToNormal(boolean notifyBackToNormal) {
         this.notifyBackToNormal = notifyBackToNormal;
+    }
+
+    public boolean isIncludeCulprits() {
+        return includeCulprits;
+    }
+
+    public void setIncludeCulprits(boolean includeCulprits) {
+        this.includeCulprits = includeCulprits;
     }
 
     public String getRoom() {

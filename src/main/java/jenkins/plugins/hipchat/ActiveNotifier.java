@@ -64,8 +64,15 @@ public class ActiveNotifier implements FineGrainedNotifier {
                 || (result == Result.SUCCESS && previousResult == Result.FAILURE && notifier.isNotifyBackToNormal())
                 || (result == Result.SUCCESS && notifier.isNotifySuccess())
                 || (result == Result.UNSTABLE && notifier.isNotifyUnstable())) {
-            List<String> culpritsInHipchat = getCulpritsInHipchat(r);
-            getHipChat().publish(getBuildStatusMessage(r, culpritsInHipchat), getBuildColor(r));
+            getHipChat().publish(getBuildStatusMessage(r, fetchCulpritsIfWanted(r)), getBuildColor(r));
+        }
+    }
+
+    private List<String> fetchCulpritsIfWanted(AbstractBuild r) {
+        if (notifier.isIncludeCulprits()) {
+            return getCulpritsInHipchat(r);
+        } else {
+            return null;
         }
     }
 
