@@ -1,22 +1,17 @@
 package jenkins.plugins.hipchat;
 
-import hudson.Util;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
-import hudson.model.CauseAction;
-import hudson.model.Result;
-import hudson.model.Run;
+import hudson.model.*;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.AffectedFile;
 import hudson.scm.ChangeLogSet.Entry;
+import hudson.tasks.Mailer;
+
 import org.apache.commons.lang.StringUtils;
 
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import jenkins.model.Jenkins;
 
 @SuppressWarnings("rawtypes")
@@ -31,7 +26,7 @@ public class ActiveNotifier implements FineGrainedNotifier {
         this.notifier = notifier;
     }
 
-    private HipChatService getHipChat(AbstractBuild r) {
+    private HipChatService getHipChat() {
         return notifier.newHipChatService();
     }
 
@@ -49,12 +44,12 @@ public class ActiveNotifier implements FineGrainedNotifier {
             message.append(cause.getShortDescription());
             notifyStart(build, message.appendOpenLink().toString());
         } else {
-            notifyStart(build, getBuildStatusMessage(build));
+            notifyStart(build, getBuildStatusMessage(build, null));
         }
     }
 
     private void notifyStart(AbstractBuild build, String message) {
-        getHipChat(build).publish(message, "green");
+        getHipChat().publish(message, "green");
     }
 
     public void finalized(AbstractBuild r) {
@@ -71,7 +66,39 @@ public class ActiveNotifier implements FineGrainedNotifier {
                 || (result == Result.SUCCESS && previousResult == Result.FAILURE && notifier.isNotifyBackToNormal())
                 || (result == Result.SUCCESS && notifier.isNotifySuccess())
                 || (result == Result.UNSTABLE && notifier.isNotifyUnstable())) {
-            getHipChat(r).publish(getBuildStatusMessage(r), getBuildColor(r));
+            getHipChat().publish(getBuildStatusMessage(r, fetchCulpritsIfWanted(r)), getBuildColor(r));
+        }
+    }
+
+    private List<String> fetchCulpritsIfWanted(AbstractBuild r) {
+        if (notifier.isIncludeCulprits()) {
+            return getCulpritsInHipchat(r);
+        } else {
+            return null;
+        }
+    }
+
+    private List<String> getCulpritsInHipchat(AbstractBuild r) {
+        List<String> hipchatUsernames = new ArrayList<String>();
+        for(Object userObj : r.getCulprits()) {
+            User user = (User)userObj;
+            logger.log(Level.FINE, "Looking up mention name for user {0}", user);
+            Mailer.UserProperty mailProperty = (user).getProperty(Mailer.UserProperty.class);
+            if(mailProperty != null && !StringUtils.isEmpty(mailProperty.getAddress())) {
+                hipchatUsernames.add(buildMentionNameFromEmail(mailProperty));
+            }else{
+                hipchatUsernames.add(user.getFullName());
+            }
+        }
+        return hipchatUsernames;
+    }
+
+    private String buildMentionNameFromEmail(Mailer.UserProperty mailProperty) {
+        String mentionName = getHipChat().getMentionNameForEmail(mailProperty.getAddress());
+        if (mentionName != null) {
+            return "@" + mentionName;
+        } else {
+            return mailProperty.getAddress();
         }
     }
 
@@ -122,10 +149,11 @@ public class ActiveNotifier implements FineGrainedNotifier {
         }
     }
 
-    String getBuildStatusMessage(AbstractBuild r) {
+    String getBuildStatusMessage(AbstractBuild r, List<String> culpritsInHipchat) {
         MessageBuilder message = new MessageBuilder(r);
         message.appendStatusMessage();
         message.appendDuration();
+        message.appendCulprits(culpritsInHipchat);
         return message.appendOpenLink().toString();
     }
 
@@ -179,14 +207,28 @@ public class ActiveNotifier implements FineGrainedNotifier {
         }
 
         public MessageBuilder appendOpenLink() {
-            String url = Jenkins.getInstance().getRootUrl() + build.getUrl();
-            message.append(" (<a href='").append(url).append("'>Open</a>)");
+            message.append(" (<a href='");
+            if (Jenkins.getInstance() != null) {
+                message.append(Jenkins.getInstance().getRootUrl());
+            }
+            message.append(build.getUrl()).append("'>Open</a>)");
             return this;
         }
 
         public MessageBuilder appendDuration() {
             message.append(" after ");
             message.append(build.getDurationString());
+            return this;
+        }
+
+        public MessageBuilder appendCulprits(List<String> culprits) {
+            if(culprits != null && culprits.size()>0) {
+                message.append(" Committers: ");
+                for (String hipchatUsername : culprits) {
+                    message.append(hipchatUsername);
+                    message.append(" ");
+                }
+            }
             return this;
         }
 

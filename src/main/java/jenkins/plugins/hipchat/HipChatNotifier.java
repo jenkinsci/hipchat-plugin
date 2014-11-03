@@ -37,10 +37,12 @@ public class HipChatNotifier extends Notifier {
     private boolean notifyUnstable;
     private boolean notifyFailure;
     private boolean notifyBackToNormal;
+    private boolean includeCulprits;
 
     @DataBoundConstructor
     public HipChatNotifier(String room, boolean startNotification, boolean notifySuccess, boolean notifyAborted,
-            boolean notifyNotBuilt, boolean notifyUnstable, boolean notifyFailure, boolean notifyBackToNormal) {
+            boolean notifyNotBuilt, boolean notifyUnstable, boolean notifyFailure, boolean notifyBackToNormal,
+            boolean includeCulprits) {
         this.room = room;
         this.startNotification = startNotification;
         this.notifySuccess = notifySuccess;
@@ -49,6 +51,7 @@ public class HipChatNotifier extends Notifier {
         this.notifyUnstable = notifyUnstable;
         this.notifyFailure = notifyFailure;
         this.notifyBackToNormal = notifyBackToNormal;
+        this.includeCulprits = includeCulprits;
     }
 
     public boolean isStartNotification() {
@@ -107,6 +110,14 @@ public class HipChatNotifier extends Notifier {
         this.notifyBackToNormal = notifyBackToNormal;
     }
 
+    public boolean isIncludeCulprits() {
+        return includeCulprits;
+    }
+
+    public void setIncludeCulprits(boolean includeCulprits) {
+        this.includeCulprits = includeCulprits;
+    }
+
     public String getRoom() {
         return StringUtils.isBlank(room) ? getDescriptor().getRoom() : room;
     }
@@ -151,7 +162,7 @@ public class HipChatNotifier extends Notifier {
             logger.info("Invoking Started...");
             new ActiveNotifier(this).started(build);
         }
-        return super.prebuild(build, listener);
+        return true;
     }
 
     @Override
@@ -159,7 +170,7 @@ public class HipChatNotifier extends Notifier {
             throws InterruptedException, IOException {
         logger.info("Invoking Completed...");
         new ActiveNotifier(this).completed(build);
-        return super.perform(build, launcher, listener);
+        return true;
     }
 
     @Extension
