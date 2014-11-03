@@ -5,11 +5,13 @@ import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.AffectedFile;
 import hudson.scm.ChangeLogSet.Entry;
 import hudson.tasks.Mailer;
+
 import org.apache.commons.lang.StringUtils;
 
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import jenkins.model.Jenkins;
 
 @SuppressWarnings("rawtypes")
@@ -80,16 +82,24 @@ public class ActiveNotifier implements FineGrainedNotifier {
         List<String> hipchatUsernames = new ArrayList<String>();
         for(Object userObj : r.getCulprits()) {
             User user = (User)userObj;
+            logger.log(Level.FINE, "Looking up mention name for user {0}", user);
             Mailer.UserProperty mailProperty = (user).getProperty(Mailer.UserProperty.class);
-            logger.log(Level.SEVERE, "Getting email for "+user.getFullName());
             if(mailProperty != null && !StringUtils.isEmpty(mailProperty.getAddress())) {
-                logger.log(Level.SEVERE, "It's "+mailProperty.getAddress());
-                hipchatUsernames.add("@"+getHipChat().getMentionNameForEmail(mailProperty.getAddress()));
+                hipchatUsernames.add(buildMentionNameFromEmail(mailProperty));
             }else{
                 hipchatUsernames.add(user.getFullName());
             }
         }
         return hipchatUsernames;
+    }
+
+    private String buildMentionNameFromEmail(Mailer.UserProperty mailProperty) {
+        String mentionName = getHipChat().getMentionNameForEmail(mailProperty.getAddress());
+        if (mentionName != null) {
+            return "@" + mentionName;
+        } else {
+            return mailProperty.getAddress();
+        }
     }
 
     String getChanges(AbstractBuild r) {
@@ -197,8 +207,11 @@ public class ActiveNotifier implements FineGrainedNotifier {
         }
 
         public MessageBuilder appendOpenLink() {
-            String url = Jenkins.getInstance().getRootUrl() + build.getUrl();
-            message.append(" (<a href='").append(url).append("'>Open</a>)");
+            message.append(" (<a href='");
+            if (Jenkins.getInstance() != null) {
+                message.append(Jenkins.getInstance().getRootUrl());
+            }
+            message.append(build.getUrl()).append("'>Open</a>)");
             return this;
         }
 
@@ -217,16 +230,6 @@ public class ActiveNotifier implements FineGrainedNotifier {
                 }
             }
             return this;
-        }
-
-        private String getEmailOrFullNameForUser(User user, HipChatService hipChat) {
-            Mailer.UserProperty email = user.getProperty(Mailer.UserProperty.class);
-            if(email != null && !StringUtils.isEmpty(email.getAddress()
-            )){
-                return hipChat.getMentionNameForEmail(email.getAddress());
-            }else{
-                return user.getFullName();
-            }
         }
 
         @Override

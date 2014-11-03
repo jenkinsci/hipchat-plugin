@@ -162,7 +162,7 @@ public class HipChatNotifier extends Notifier {
             logger.info("Invoking Started...");
             new ActiveNotifier(this).started(build);
         }
-        return super.prebuild(build, listener);
+        return true;
     }
 
     @Override
@@ -170,7 +170,7 @@ public class HipChatNotifier extends Notifier {
             throws InterruptedException, IOException {
         logger.info("Invoking Completed...");
         new ActiveNotifier(this).completed(build);
-        return super.perform(build, launcher, listener);
+        return true;
     }
 
     @Extension
