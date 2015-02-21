@@ -159,7 +159,7 @@ public class HipChatNotifier extends Notifier {
             throws InterruptedException, IOException {
         logger.info("Invoking Completed...");
         new ActiveNotifier(this).completed(build);
-        return super.perform(build, launcher, listener);
+        return true;
     }
 
     @Extension
