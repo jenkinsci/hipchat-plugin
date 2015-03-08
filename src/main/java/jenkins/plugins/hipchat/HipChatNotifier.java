@@ -14,8 +14,6 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
-import java.io.IOException;
-import java.util.logging.Logger;
 import jenkins.model.Jenkins;
 import jenkins.plugins.hipchat.impl.HipChatV1Service;
 import jenkins.plugins.hipchat.impl.HipChatV2Service;
@@ -26,7 +24,10 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.Exported;
 
-import static jenkins.plugins.hipchat.NotificationType.*;
+import java.io.IOException;
+import java.util.logging.Logger;
+
+import static jenkins.plugins.hipchat.NotificationType.STARTED;
 
 @SuppressWarnings({"unchecked"})
 public class HipChatNotifier extends Notifier {
@@ -42,10 +43,14 @@ public class HipChatNotifier extends Notifier {
     private boolean notifyFailure;
     private boolean notifyBackToNormal;
 
+    private String startJobMessage;
+    private String completeJobMessage;
+
     @DataBoundConstructor
     public HipChatNotifier(String token, String room, boolean startNotification, boolean notifySuccess,
             boolean notifyAborted, boolean notifyNotBuilt, boolean notifyUnstable, boolean notifyFailure,
-            boolean notifyBackToNormal) {
+            boolean notifyBackToNormal,
+            String startJobMessage, String completeJobMessage) {
         this.token = token;
         this.room = room;
         this.startNotification = startNotification;
@@ -55,7 +60,12 @@ public class HipChatNotifier extends Notifier {
         this.notifyUnstable = notifyUnstable;
         this.notifyFailure = notifyFailure;
         this.notifyBackToNormal = notifyBackToNormal;
+
+        this.startJobMessage = startJobMessage;
+        this.completeJobMessage = completeJobMessage;
     }
+
+    /* notification enabled disabled setter/getter */
 
     public boolean isStartNotification() {
         return startNotification;
@@ -111,6 +121,32 @@ public class HipChatNotifier extends Notifier {
 
     public void setNotifyBackToNormal(boolean notifyBackToNormal) {
         this.notifyBackToNormal = notifyBackToNormal;
+    }
+
+    /* notification message configuration*/
+
+    public String getCompleteJobMessage() {
+        return completeJobMessage;
+    }
+
+    public void setCompleteJobMessage(String completeJobMessage) {
+        this.completeJobMessage = completeJobMessage;
+    }
+
+    public String getStartJobMessage() {
+        return startJobMessage;
+    }
+
+    public void setStartJobMessage(String startJobMessage) {
+        this.startJobMessage = startJobMessage;
+    }
+
+    public String getCompleteJobMessageDefault() {
+        return Messages.JobCompleted();
+    }
+
+    public String getStartJobMessageDefault() {
+        return Messages.JobStarted();
     }
 
     public String getRoom() {
@@ -179,7 +215,7 @@ public class HipChatNotifier extends Notifier {
 
     private void publishNotificationIfEnabled(NotificationType notificationType, AbstractBuild<?, ?> build) {
         if (isNotificationEnabled(notificationType)) {
-            getHipChatService().publish(notificationType.getMessage(build), notificationType.getColor());
+            getHipChatService().publish(notificationType.getMessage(build, this), notificationType.getColor());
         }
     }
 

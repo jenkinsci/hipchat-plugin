@@ -1,3 +1,4 @@
+<?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
 
     <f:entry title="${%Auth Token}" help="/plugin/hipchat/help-projectConfig-token.html">
@@ -34,6 +35,18 @@
 
         <f:entry title="${%Notify Back To Normal}">
             <f:checkbox name="hipchat.notifyBackToNormal" checked="${instance.notifyBackToNormal}" />
+        </f:entry>
+    </f:section>
+
+    <f:section title="${%Message Templates}">
+        <f:entry title="${%Job started}" help="/plugin/hipchat/help-projectConfig-hipChatMessages.html">
+            <f:textbox name="hipchat.startJobMessage" value="${instance.startJobMessage}"/>
+            Default: '${instance.getStartJobMessageDefault()}'
+        </f:entry>
+
+        <f:entry title="${%Job completed}">
+            <f:textbox name="hipchat.completeJobMessage" value="${instance.completeJobMessage}"/>
+            Default: '${instance.getCompleteJobMessageDefault()}'
         </f:entry>
     </f:section>
 </j:jelly>

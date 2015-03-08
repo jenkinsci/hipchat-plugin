@@ -1,135 +1,142 @@
 package jenkins.plugins.hipchat;
 
+import com.google.common.base.Preconditions;
+import hudson.EnvVars;
 import hudson.model.AbstractBuild;
-import hudson.model.CauseAction;
 import hudson.model.Result;
-import hudson.scm.ChangeLogSet;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.logging.Level;
+import hudson.util.LogTaskListener;
+import hudson.util.VariableResolver;
+
+import java.io.IOException;
+import java.util.Map;
 import java.util.logging.Logger;
-import jenkins.model.Jenkins;
-import org.apache.commons.lang.StringUtils;
+
+import static com.google.common.base.Throwables.propagate;
+import static com.google.common.collect.Maps.newHashMap;
+import static hudson.Util.replaceMacro;
+import static java.util.logging.Level.INFO;
 
 public enum NotificationType {
 
-    STARTED("green") {
-
-                @Override
-                protected String getStatusMessage(AbstractBuild<?, ?> build) {
-                    String changes = getStatusMessageWithChanges(build);
-                    if (changes != null) {
-                        return changes;
-                    } else {
-                        CauseAction cause = build.getAction(CauseAction.class);
-                        if (cause != null) {
-                            return cause.getShortDescription();
-                        } else {
-                            return Messages.Starting();
-                        }
-                    }
-                }
-            },
+    STARTED("green", true) {
+        @Override
+        protected String getStatus() {
+            return Messages.Started();
+        }
+    },
     ABORTED("gray") {
-
-                @Override
-                protected String getStatusMessage(AbstractBuild<?, ?> build) {
-                    return Messages.Aborted(build.getDurationString());
-                }
-            },
+        @Override
+        protected String getStatus() {
+            return Messages.Aborted();
+        }
+    },
     SUCCESS("green") {
-
-                @Override
-                protected String getStatusMessage(AbstractBuild<?, ?> build) {
-                    return Messages.Success(build.getDurationString());
-                }
-            },
+        @Override
+        protected String getStatus() {
+            return Messages.Success();
+        }
+    },
     FAILURE("red") {
-
-                @Override
-                protected String getStatusMessage(AbstractBuild<?, ?> build) {
-                    return Messages.Failure(build.getDurationString());
-                }
-            },
+        @Override
+        protected String getStatus() {
+            return Messages.Failure();
+        }
+    },
     NOT_BUILT("gray") {
-
-                @Override
-                protected String getStatusMessage(AbstractBuild<?, ?> build) {
-                    return Messages.NotBuilt();
-                }
-            },
+        @Override
+        protected String getStatus() {
+            return Messages.NotBuilt();
+        }
+    },
     BACK_TO_NORMAL("green") {
-
-                @Override
-                protected String getStatusMessage(AbstractBuild<?, ?> build) {
-                    return Messages.BackToNormal(build.getDurationString());
-                }
-            },
+        @Override
+        protected String getStatus() {
+            return Messages.BackToNormal();
+        }
+    },
     UNSTABLE("yellow") {
-
-                @Override
-                protected String getStatusMessage(AbstractBuild<?, ?> build) {
-                    return Messages.Unstable(build.getDurationString());
-                }
-            },
+        @Override
+        protected String getStatus() {
+            return Messages.Unstable();
+        }
+    },
     UNKNOWN("purple") {
+        @Override
+        protected String getStatus() {
+            throw new IllegalStateException();
+        }
+    };
 
-                @Override
-                protected String getStatusMessage(AbstractBuild<?, ?> build) {
-                    throw new IllegalStateException("Unable to generate status message for UNKNOWN notification type");
-                }
-            };
     private static final Logger logger = Logger.getLogger(NotificationType.class.getName());
     private final String color;
+    private final boolean isStartType;
 
-    private NotificationType(String color) {
+    private NotificationType(String color, boolean isStartType) {
         this.color = color;
+        this.isStartType = isStartType;
     }
 
-    protected abstract String getStatusMessage(AbstractBuild<?, ?> build);
+    private NotificationType(String color) {
+        this(color, false);
+    }
+
+    protected abstract String getStatus();
 
     public String getColor() {
         return color;
     }
 
-    private static String getStatusMessageWithChanges(AbstractBuild<?, ?> build) {
-        if (!build.hasChangeSetComputed()) {
-            logger.log(Level.FINE, "No changeset computed for job {0}", build.getProject().getFullDisplayName());
-            return null;
-        }
+    public final String getMessage(AbstractBuild<?, ?> build, HipChatNotifier notifier) {
+        String format = getTemplateFor(notifier);
+        Map<String, String> messageVariables = collectParametersFor(build);
 
-        Set<String> authors = new HashSet<String>();
-        int changedFiles = 0;
-        for (Object o : build.getChangeSet().getItems()) {
-            ChangeLogSet.Entry entry = (ChangeLogSet.Entry) o;
-            logger.log(Level.FINEST, "Entry {0}", entry);
-            authors.add(entry.getAuthor().getDisplayName());
-            try {
-                changedFiles += entry.getAffectedFiles().size();
-            } catch (UnsupportedOperationException e) {
-                logger.log(Level.INFO, "Unable to collect the affected files for job {0}",
-                        build.getProject().getFullDisplayName());
-                return null;
-            }
-        }
-        if (changedFiles == 0) {
-            logger.log(Level.FINE, "No changes detected");
-            return null;
-        }
-
-        return Messages.StartWithChanges(StringUtils.join(authors, ", "), changedFiles);
+        return replaceMacro(format, new VariableResolver.ByMap<String>(messageVariables));
     }
 
-    public final String getMessage(AbstractBuild<?, ?> build) {
-        String rootUrl = Jenkins.getInstance().getRootUrl();
-        StringBuilder sb = new StringBuilder(150);
-        sb.append(Messages.MessageStart(build.getProject().getFullDisplayName(), build.getDisplayName()));
-        sb.append(' ');
-        sb.append(getStatusMessage(build));
+    private String getTemplateFor(HipChatNotifier notifier) {
+        String userConfig, defaultConfig;
+        if (this.isStartType) {
+            userConfig = notifier.getStartJobMessage();
+            defaultConfig = Messages.JobStarted();
+        } else {
+            userConfig = notifier.getCompleteJobMessage();
+            defaultConfig = Messages.JobCompleted();
+        }
 
-        sb.append(" (<a href=\"").append(rootUrl).append(build.getUrl()).append("\">Open</a>)");
+        if (userConfig == null || userConfig.trim().isEmpty()) {
+            Preconditions.checkState(defaultConfig != null, "default config not set for %s", this);
+            return defaultConfig;
+        } else {
+            return userConfig;
+        }
+    }
 
-        return sb.toString();
+    private Map<String, String> collectParametersFor(AbstractBuild build) {
+        Map<String, String> merged = newHashMap();
+        merged.putAll(build.getBuildVariables());
+        merged.putAll(getEnvVars(build));
+
+        String cause = NotificationTypeUtils.getCause(build);
+        String changes = NotificationTypeUtils.getChanges(build);
+
+        merged.put("STATUS", this.getStatus());
+        merged.put("DURATION", build.getDurationString());
+        merged.put("URL", NotificationTypeUtils.getUrl(build));
+        merged.put("CAUSE", cause);
+        merged.put("CHANGES_OR_CAUSE", changes != null ? changes : cause);
+        merged.put("CHANGES", changes);
+        merged.put("PRINT_FULL_ENV", merged.toString());
+        return merged;
+    }
+
+    private EnvVars getEnvVars(AbstractBuild build) {
+        try {
+            return build.getEnvironment(new LogTaskListener(logger, INFO));
+        } catch (IOException e) {
+            throw propagate(e);
+        } catch (InterruptedException e) {
+            throw propagate(e);
+        }
     }
 
     public static final NotificationType fromResults(Result previousResult, Result result) {
