@@ -7,7 +7,6 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
 import org.apache.commons.httpclient.protocol.Protocol;
 import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
-import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
 
 public abstract class HipChatService {
 

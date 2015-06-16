@@ -57,5 +57,4 @@ public class TLSProtocolSocketFactory extends SSLProtocolSocketFactory {
         Socket newSocket = super.createSocket(socket, host, port, autoClose);
         return stripSSLv3(newSocket);
     }
-    
 }
