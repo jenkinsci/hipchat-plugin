@@ -3,6 +3,7 @@ package jenkins.plugins.hipchat;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.Util;
+import hudson.matrix.MatrixRun;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
@@ -18,6 +19,7 @@ import jenkins.model.Jenkins;
 import jenkins.plugins.hipchat.impl.HipChatV1Service;
 import jenkins.plugins.hipchat.impl.HipChatV2Service;
 import net.sf.json.JSONObject;
+
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -196,13 +198,16 @@ public class HipChatNotifier extends Notifier {
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
             throws InterruptedException, IOException {
-        logger.fine("Creating build completed notification");
-        Result result = build.getResult();
-        Result previousResult = findPreviousBuildResult(build);
-
-        NotificationType notificationType = NotificationType.fromResults(previousResult, result);
-        publishNotificationIfEnabled(notificationType, build);
-
+    	// Only perform notification on parent of Matrix jobs
+    	// TODO duplicate Matrix configuration from the email-ext plugin
+    	if(!(build instanceof MatrixRun)) {
+	        logger.fine("Creating build completed notification");
+	        Result result = build.getResult();
+	        Result previousResult = findPreviousBuildResult(build);
+	
+	        NotificationType notificationType = NotificationType.fromResults(previousResult, result);
+	        publishNotificationIfEnabled(notificationType, build);
+    	}
         return true;
     }
 
