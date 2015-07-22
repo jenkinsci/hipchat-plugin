@@ -1,8 +1,8 @@
 package jenkins.plugins.hipchat;
 
 import hudson.ProxyConfiguration;
-import hudson.model.AbstractBuild;
 import jenkins.model.Jenkins;
+import jenkins.plugins.hipchat.exceptions.NotificationException;
 import org.apache.commons.httpclient.HttpClient;
 
 public abstract class HipChatService {
@@ -10,7 +10,7 @@ public abstract class HipChatService {
     /**
      * HTTP Connection timeout when making calls to HipChat
      */
-    public static final Integer DEFAULT_TIMEOUT = 10000;
+    private static final Integer DEFAULT_TIMEOUT = 10000;
 
     protected HttpClient getHttpClient() {
         HttpClient client = new HttpClient();
@@ -28,7 +28,7 @@ public abstract class HipChatService {
         return client;
     }
 
-    public abstract void publish(String message, String color);
+    public abstract void publish(String message, String color) throws NotificationException;
 
-    public abstract void publish(String message, String color, boolean notify);
+    public abstract void publish(String message, String color, boolean notify) throws NotificationException;
 }

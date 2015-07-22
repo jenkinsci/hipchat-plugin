@@ -15,6 +15,7 @@ import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
+import jenkins.plugins.hipchat.exceptions.NotificationException;
 import jenkins.plugins.hipchat.impl.HipChatV1Service;
 import jenkins.plugins.hipchat.impl.HipChatV2Service;
 import net.sf.json.JSONObject;
@@ -25,6 +26,7 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.Exported;
 
 import java.io.IOException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static jenkins.plugins.hipchat.NotificationType.STARTED;
@@ -188,7 +190,7 @@ public class HipChatNotifier extends Notifier {
     @Override
     public boolean prebuild(AbstractBuild<?, ?> build, BuildListener listener) {
         logger.fine("Creating build start notification");
-        publishNotificationIfEnabled(STARTED, build);
+        publishNotificationIfEnabled(STARTED, build, listener);
 
         return true;
     }
@@ -201,7 +203,7 @@ public class HipChatNotifier extends Notifier {
         Result previousResult = findPreviousBuildResult(build);
 
         NotificationType notificationType = NotificationType.fromResults(previousResult, result);
-        publishNotificationIfEnabled(notificationType, build);
+        publishNotificationIfEnabled(notificationType, build, listener);
 
         return true;
     }
@@ -216,9 +218,15 @@ public class HipChatNotifier extends Notifier {
         return build.getResult();
     }
 
-    private void publishNotificationIfEnabled(NotificationType notificationType, AbstractBuild<?, ?> build) {
+    private void publishNotificationIfEnabled(NotificationType notificationType, AbstractBuild<?, ?> build,
+            BuildListener listener) {
         if (isNotificationEnabled(notificationType)) {
-            getHipChatService().publish(notificationType.getMessage(build, this), notificationType.getColor());
+            try {
+                getHipChatService().publish(notificationType.getMessage(build, this), notificationType.getColor());
+                listener.getLogger().println(Messages.NotificationSuccessful(getRoom()));
+            } catch (NotificationException ne) {
+                listener.getLogger().println(Messages.NotificationFailed(ne.getMessage()));
+            }
         }
     }
 
@@ -246,8 +254,7 @@ public class HipChatNotifier extends Notifier {
     private HipChatService getHipChatService() {
         DescriptorImpl desc = getDescriptor();
         String authToken = Util.fixEmpty(token) != null ? token : desc.getToken();
-        return getHipChatService(desc.getServer(), authToken, desc.isV2Enabled(),
-                StringUtils.isBlank(room) ? desc.getRoom() : room, desc.getSendAs());
+        return getHipChatService(desc.getServer(), authToken, desc.isV2Enabled(), getRoom(), desc.getSendAs());
     }
 
     private static HipChatService getHipChatService(String server, String token, boolean v2Enabled, String room,
@@ -330,8 +337,13 @@ public class HipChatNotifier extends Notifier {
                 @QueryParameter("hipchat.token") String token, @QueryParameter("hipchat.v2Enabled") boolean v2Enabled,
                 @QueryParameter("hipchat.room") String room, @QueryParameter("hipchat.sendAs") String sendAs) {
             HipChatService service = getHipChatService(server, token, v2Enabled, room, sendAs);
-            service.publish(Messages.TestNotification(++testNotificationCount), "yellow");
-            return FormValidation.ok(Messages.TestNotificationSent());
+            try {
+                service.publish(Messages.TestNotification(++testNotificationCount), "yellow");
+                return FormValidation.ok(Messages.TestNotificationSent());
+            } catch (NotificationException ne) {
+                logger.log(Level.INFO, "HipChat test notification failed", ne);
+                return FormValidation.error(Messages.TestNotificationFailed(ne.getMessage()));
+            }
         }
 
         @Override

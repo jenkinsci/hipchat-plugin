@@ -1,11 +1,13 @@
 package jenkins.plugins.hipchat.impl;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.plugins.hipchat.HipChatService;
+import jenkins.plugins.hipchat.Messages;
+import jenkins.plugins.hipchat.exceptions.InvalidResponseCodeException;
+import jenkins.plugins.hipchat.exceptions.NotificationException;
 import net.sf.json.JSONObject;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
@@ -27,11 +29,11 @@ public class HipChatV2Service extends HipChatService {
         this.roomIds = roomIds == null ? DEFAULT_ROOMS : roomIds.split("\\s*,\\s*");
     }
 
-    public void publish(String message, String color) {
+    public void publish(String message, String color) throws NotificationException {
         publish(message, color, shouldNotify(color));
     }
 
-    public void publish(String message, String color, boolean notify) {
+    public void publish(String message, String color, boolean notify) throws NotificationException {
         for (String roomId : roomIds) {
             logger.log(Level.INFO, "Posting: {0} to {1}: {2}", new Object[]{roomId, message, color});
             HttpClient client = getHttpClient();
@@ -53,14 +55,15 @@ public class HipChatV2Service extends HipChatService {
                     if (logger.isLoggable(Level.WARNING)) {
                         logger.log(Level.WARNING, "HipChat post may have failed. ResponseCode: {0}, Response: {1}",
                                 new Object[]{responseCode, post.getResponseBodyAsString()});
+                        throw new InvalidResponseCodeException(responseCode);
                     }
                 }
             } catch (IllegalArgumentException iae) {
                 logger.log(Level.WARNING, "Invalid argument provided", iae);
-            } catch (UnsupportedEncodingException uee) {
-                logger.log(Level.WARNING, "Unable to construct notification URL", uee);
+                throw new NotificationException(Messages.IllegalArgument(iae.getMessage()));
             } catch (IOException ioe) {
                 logger.log(Level.WARNING, "An IO error occurred while posting HipChat notification", ioe);
+                throw new NotificationException(Messages.IOException(ioe.getMessage()));
             } finally {
                 if (post != null) {
                     post.releaseConnection();

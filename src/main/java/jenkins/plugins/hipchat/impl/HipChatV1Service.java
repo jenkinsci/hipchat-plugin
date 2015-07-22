@@ -1,5 +1,6 @@
 package jenkins.plugins.hipchat.impl;
 
+import java.io.IOException;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.PostMethod;
@@ -7,6 +8,9 @@ import org.apache.commons.httpclient.methods.PostMethod;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.plugins.hipchat.HipChatService;
+import jenkins.plugins.hipchat.Messages;
+import jenkins.plugins.hipchat.exceptions.InvalidResponseCodeException;
+import jenkins.plugins.hipchat.exceptions.NotificationException;
 
 public class HipChatV1Service extends HipChatService {
 
@@ -26,14 +30,14 @@ public class HipChatV1Service extends HipChatService {
     }
 
     @Override
-    public void publish(String message, String color) {
+    public void publish(String message, String color) throws NotificationException {
         publish(message, color, shouldNotify(color));
     }
 
     @Override
-    public void publish(String message, String color, boolean notify) {
+    public void publish(String message, String color, boolean notify) throws NotificationException {
         for (String roomId : roomIds) {
-            logger.log(Level.INFO, "Posting: {0} to {1}: {2} {3}", new Object[]{sendAs, roomId, message, color});
+            logger.log(Level.FINE, "Posting: {0} to {1}: {2} {3}", new Object[]{sendAs, roomId, message, color});
             HttpClient client = getHttpClient();
             String url = "https://" + server + "/v1/rooms/message";
             PostMethod post = new PostMethod(url);
@@ -48,11 +52,17 @@ public class HipChatV1Service extends HipChatService {
                 post.getParams().setContentCharset("UTF-8");
                 int responseCode = client.executeMethod(post);
                 String response = post.getResponseBodyAsString();
-                if (responseCode != HttpStatus.SC_OK || !response.contains("\"sent\"")) {
-                    logger.log(Level.WARNING, "HipChat post may have failed. Response: {0}", response);
+                if (responseCode != HttpStatus.SC_OK) {
+                    logger.log(Level.WARNING, "HipChat post may have failed. ResponseCode: {0}, Response: {1}",
+                            new Object[]{responseCode, response});
+                    throw new InvalidResponseCodeException(responseCode);
                 }
-            } catch (Exception e) {
-                logger.log(Level.WARNING, "Error posting to HipChat", e);
+            } catch (IllegalArgumentException iae) {
+                logger.log(Level.WARNING, "Invalid argument provided", iae);
+                throw new NotificationException(Messages.IllegalArgument(iae.getMessage()));
+            } catch (IOException ioe) {
+                logger.log(Level.WARNING, "An IO error occurred while posting HipChat notification", ioe);
+                throw new NotificationException(Messages.IOException(ioe.getMessage()));
             } finally {
                 post.releaseConnection();
             }

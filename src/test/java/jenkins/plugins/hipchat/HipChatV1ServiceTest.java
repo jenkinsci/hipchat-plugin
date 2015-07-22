@@ -6,9 +6,12 @@ import org.junit.Test;
 import static junit.framework.Assert.assertEquals;
 import static org.junit.Assert.assertArrayEquals;
 
+import jenkins.plugins.hipchat.exceptions.NotificationException;
+
 public class HipChatV1ServiceTest {
-    @Test
-    public void publishWithBadHostShouldNotRethrowExceptions() {
+
+    @Test(expected = NotificationException.class)
+    public void publishWithBadHostShouldResultInNotificationException() throws Exception {
         HipChatV1Service service = new HipChatV1Service("badhost", "token", "room", "from");
         service.publish("message", "yellow");
     }
