@@ -1,7 +1,7 @@
 package jenkins.plugins.hipchat.impl;
 
+import hudson.Util;
 import java.io.IOException;
-import java.net.URLEncoder;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.plugins.hipchat.HipChatService;
@@ -40,7 +40,7 @@ public class HipChatV2Service extends HipChatService {
 
             PostMethod post = null;
             try {
-                String url = "https://" + server + "/v2/room/" + URLEncoder.encode(roomId, "UTF-8") + "/notification";
+                String url = "https://" + server + "/v2/room/" + Util.rawEncode(roomId) + "/notification";
                 post = new PostMethod(url);
                 post.getParams().setContentCharset("UTF-8");
                 post.addRequestHeader("Authorization", "Bearer " + token);
