@@ -151,7 +151,7 @@ public enum NotificationType {
         } else if (result == Result.UNSTABLE) {
             return UNSTABLE;
         } else if (result == Result.SUCCESS) {
-            if (previousResult == Result.FAILURE || previousResult == Result.UNSTABLE) {
+            if (previousResult != Result.SUCCESS) {
                 return BACK_TO_NORMAL;
             } else {
                 return SUCCESS;
