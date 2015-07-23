@@ -364,7 +364,6 @@ public class HipChatNotifier extends Notifier {
                 service.publish(Messages.TestNotification(++testNotificationCount), "yellow");
                 return FormValidation.ok(Messages.TestNotificationSent());
             } catch (NotificationException ne) {
-                logger.log(Level.INFO, "HipChat test notification failed", ne);
                 return FormValidation.error(Messages.TestNotificationFailed(ne.getMessage()));
             }
         }

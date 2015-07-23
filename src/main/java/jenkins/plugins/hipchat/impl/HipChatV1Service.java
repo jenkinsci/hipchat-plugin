@@ -59,10 +59,10 @@ public class HipChatV1Service extends HipChatService {
                 }
             } catch (IllegalArgumentException iae) {
                 logger.log(Level.WARNING, "Invalid argument provided", iae);
-                throw new NotificationException(Messages.IllegalArgument(iae.getMessage()));
+                throw new NotificationException(Messages.IllegalArgument(iae.toString()));
             } catch (IOException ioe) {
                 logger.log(Level.WARNING, "An IO error occurred while posting HipChat notification", ioe);
-                throw new NotificationException(Messages.IOException(ioe.getMessage()));
+                throw new NotificationException(Messages.IOException(ioe.toString()));
             } finally {
                 post.releaseConnection();
             }
