@@ -347,9 +347,18 @@ public class HipChatNotifier extends Notifier {
             return super.configure(request, formData);
         }
 
-        public FormValidation doSendTestNotification(@QueryParameter("hipchat.server") String server,
-                @QueryParameter("hipchat.token") String token, @QueryParameter("hipchat.v2Enabled") boolean v2Enabled,
-                @QueryParameter("hipchat.room") String room, @QueryParameter("hipchat.sendAs") String sendAs) {
+        public FormValidation doCheckSendAs(@QueryParameter boolean v2Enabled, @QueryParameter String sendAs) {
+            sendAs = Util.fixEmpty(sendAs);
+            if (!v2Enabled) {
+                if (sendAs == null || sendAs.length() > 15) {
+                    return FormValidation.error(Messages.InvalidSendAs());
+                }
+            }
+            return FormValidation.ok();
+        }
+
+        public FormValidation doSendTestNotification(@QueryParameter String server, @QueryParameter String token,
+                @QueryParameter boolean v2Enabled, @QueryParameter String room, @QueryParameter String sendAs) {
             HipChatService service = getHipChatService(server, token, v2Enabled, room, sendAs);
             try {
                 service.publish(Messages.TestNotification(++testNotificationCount), "yellow");

@@ -1,21 +1,21 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
     <f:section title="${%Global HipChat Notifier Settings}">
-        <f:entry title="${%HipChat Server}" help="/plugin/hipchat/help-globalConfig-hipChatServer.html">
-            <f:textbox name="hipchat.server" default="api.hipchat.com" value="${descriptor.server}" />
+        <f:entry title="${%HipChat Server}" help="/plugin/hipchat/help-globalConfig-hipChatServer.html" field="server">
+            <f:textbox default="api.hipchat.com" />
         </f:entry>
-        <f:entry title="${%Use v2 API}" help="/plugin/hipchat/help-globalConfig-hipChatv2Enabled.html">
-            <f:checkbox name="hipchat.v2Enabled" checked="${descriptor.v2Enabled}"/>
+        <f:entry title="${%Use v2 API}" help="/plugin/hipchat/help-globalConfig-hipChatv2Enabled.html" field="v2Enabled">
+            <f:checkbox />
         </f:entry>
-        <f:entry title="${%API Token}" help="/plugin/hipchat/help-globalConfig-hipChatToken.html">
-            <f:textbox name="hipchat.token" value="${descriptor.token}" />
+        <f:entry title="${%API Token}" help="/plugin/hipchat/help-globalConfig-hipChatToken.html" field="token">
+            <f:textbox />
         </f:entry>
-        <f:entry title="${%Room}" help="/plugin/hipchat/help-globalConfig-hipChatRoom.html">
-            <f:textbox name="hipchat.room" value="${descriptor.room}" />
+        <f:entry title="${%Room}" help="/plugin/hipchat/help-globalConfig-hipChatRoom.html" field="room">
+            <f:textbox />
         </f:entry>
-        <f:entry title="${%Send As}" help="/plugin/hipchat/help-globalConfig-hipChatSendAs.html">
-            <f:textbox name="hipchat.sendAs" default="Jenkins" value="${descriptor.sendAs}" />
+        <f:entry title="${%Send As}" help="/plugin/hipchat/help-globalConfig-hipChatSendAs.html" field="sendAs">
+            <f:textbox default="Jenkins" />
         </f:entry>
         <f:validateButton method="sendTestNotification" title="${%Test configuration}" progress="${%Testing...}"
-                          with="hipchat.server,hipchat.token,hipchat.v2Enabled,hipchat.room,hipchat.sendAs" />
+                          with="server,token,v2Enabled,room,sendAs" />
     </f:section>
 </j:jelly>
