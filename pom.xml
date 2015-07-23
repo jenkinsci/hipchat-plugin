@@ -41,8 +41,8 @@
         <connection>scm:git:ssh://github.com/jenkinsci/hipchat-plugin.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/jenkinsci/hipchat-plugin.git</developerConnection>
         <url>https://github.com/jenkinsci/hipchat-plugin</url>
-      <tag>HEAD</tag>
-  </scm>
+        <tag>HEAD</tag>
+    </scm>
 
     <dependencyManagement>
         <dependencies>
@@ -56,6 +56,11 @@
                 <artifactId>commons-logging</artifactId>
                 <version>1.0.4</version>
                 <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.jenkins-ci.plugins</groupId>
+                <artifactId>matrix-project</artifactId>
+                <version>1.4</version>
             </dependency>
             <dependency>
                 <groupId>junit</groupId>
@@ -94,6 +99,10 @@
             <groupId>org.powermock</groupId>
             <artifactId>powermock-api-mockito</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.jenkins-ci.plugins</groupId>
+            <artifactId>matrix-project</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
@@ -115,7 +124,7 @@
                     <version>2.18</version>
                     <configuration>
                         <systemPropertyVariables>
-                          <java.util.logging.config.file>${project.build.directory}/test-classes/logging.properties</java.util.logging.config.file>
+                            <java.util.logging.config.file>${project.build.directory}/test-classes/logging.properties</java.util.logging.config.file>
                         </systemPropertyVariables>
                     </configuration>
                 </plugin>

@@ -10,6 +10,7 @@ public class HipChatNotifierBuilder {
     private boolean notifyUnstable = true;
     private boolean notifyFailure = true;
     private boolean notifyBackToNormal = true;
+    private MatrixTriggerMode matrixTriggerMode = MatrixTriggerMode.BOTH;
     private String messageJobStarted;
     private String messageJobCompleted;
 
@@ -62,9 +63,14 @@ public class HipChatNotifierBuilder {
         return this;
     }
 
+    public void setMatrixTriggerMode(MatrixTriggerMode matrixTriggerMode) {
+        this.matrixTriggerMode = matrixTriggerMode;
+    }
+
     public HipChatNotifier build() {
         return new HipChatNotifier(token, room, startNotification, notifySuccess, notifyAborted, notifyNotBuilt,
-                notifyUnstable, notifyFailure, notifyBackToNormal, messageJobStarted, messageJobCompleted);
+                notifyUnstable, notifyFailure, notifyBackToNormal, matrixTriggerMode, messageJobStarted,
+                messageJobCompleted);
     }
 
     public HipChatNotifierBuilder setMessageJobStarted(String messageJobStarted) {

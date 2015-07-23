@@ -1,8 +1,15 @@
 package jenkins.plugins.hipchat;
 
+import static jenkins.plugins.hipchat.NotificationType.STARTED;
+
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.Util;
+import hudson.matrix.MatrixAggregatable;
+import hudson.matrix.MatrixAggregator;
+import hudson.matrix.MatrixBuild;
+import hudson.matrix.MatrixProject;
+import hudson.matrix.MatrixRun;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
@@ -26,13 +33,10 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.Exported;
 
 import java.io.IOException;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static jenkins.plugins.hipchat.NotificationType.STARTED;
-
 @SuppressWarnings({"unchecked"})
-public class HipChatNotifier extends Notifier {
+public class HipChatNotifier extends Notifier implements MatrixAggregatable {
 
     private static final Logger logger = Logger.getLogger(HipChatNotifier.class.getName());
     private String token;
@@ -44,6 +48,7 @@ public class HipChatNotifier extends Notifier {
     private boolean notifyUnstable;
     private boolean notifyFailure;
     private boolean notifyBackToNormal;
+    private MatrixTriggerMode matrixTriggerMode;
 
     private String startJobMessage;
     private String completeJobMessage;
@@ -51,8 +56,8 @@ public class HipChatNotifier extends Notifier {
     @DataBoundConstructor
     public HipChatNotifier(String token, String room, boolean startNotification, boolean notifySuccess,
             boolean notifyAborted, boolean notifyNotBuilt, boolean notifyUnstable, boolean notifyFailure,
-            boolean notifyBackToNormal,
-            String startJobMessage, String completeJobMessage) {
+            boolean notifyBackToNormal, MatrixTriggerMode matrixTriggerMode, String startJobMessage,
+            String completeJobMessage) {
         this.token = token;
         this.room = room;
         this.startNotification = startNotification;
@@ -62,6 +67,7 @@ public class HipChatNotifier extends Notifier {
         this.notifyUnstable = notifyUnstable;
         this.notifyFailure = notifyFailure;
         this.notifyBackToNormal = notifyBackToNormal;
+        this.matrixTriggerMode = matrixTriggerMode;
 
         this.startJobMessage = startJobMessage;
         this.completeJobMessage = completeJobMessage;
@@ -125,6 +131,14 @@ public class HipChatNotifier extends Notifier {
         this.notifyBackToNormal = notifyBackToNormal;
     }
 
+    public MatrixTriggerMode getMatrixTriggerMode() {
+        return matrixTriggerMode == null ? MatrixTriggerMode.BOTH : matrixTriggerMode;
+    }
+
+    public void setMatrixTriggerMode(MatrixTriggerMode matrixTriggerMode) {
+        this.matrixTriggerMode = matrixTriggerMode;
+    }
+
     /* notification message configurations */
 
     public String getStartJobMessage() {
@@ -135,23 +149,12 @@ public class HipChatNotifier extends Notifier {
         this.startJobMessage = startJobMessage;
     }
 
-
     public String getCompleteJobMessage() {
         return completeJobMessage;
     }
 
     public void setCompleteJobMessage(String completeJobMessage) {
         this.completeJobMessage = completeJobMessage;
-    }
-
-    /* Default notification messages for UI */
-
-    public String getStartJobMessageDefault() {
-        return Messages.JobStarted();
-    }
-
-    public String getCompleteJobMessageDefault() {
-        return Messages.JobCompleted();
     }
 
     public String getRoom() {
@@ -203,7 +206,9 @@ public class HipChatNotifier extends Notifier {
     @Override
     public boolean prebuild(AbstractBuild<?, ?> build, BuildListener listener) {
         logger.fine("Creating build start notification");
-        publishNotificationIfEnabled(STARTED, build, listener);
+        if (!(build instanceof MatrixRun) || getMatrixTriggerMode().forChild) {
+            publishNotificationIfEnabled(STARTED, build, listener);
+        }
 
         return true;
     }
@@ -211,14 +216,20 @@ public class HipChatNotifier extends Notifier {
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
             throws InterruptedException, IOException {
+        if (!(build instanceof MatrixRun) || getMatrixTriggerMode().forChild) {
+            notifyOnBuildComplete(build, listener);
+        }
+
+        return true;
+    }
+
+    private void notifyOnBuildComplete(AbstractBuild<?, ?> build, BuildListener listener) {
         logger.fine("Creating build completed notification");
         Result result = build.getResult();
         Result previousResult = findPreviousBuildResult(build);
 
         NotificationType notificationType = NotificationType.fromResults(previousResult, result);
         publishNotificationIfEnabled(notificationType, build, listener);
-
-        return true;
     }
 
     private Result findPreviousBuildResult(AbstractBuild<?,?> build) {
@@ -280,6 +291,28 @@ public class HipChatNotifier extends Notifier {
         }
     }
 
+    @Override
+    public MatrixAggregator createAggregator(MatrixBuild build, Launcher launcher, BuildListener listener) {
+        return new MatrixAggregator(build, launcher, listener) {
+
+            @Override
+            public boolean startBuild() throws InterruptedException, IOException {
+                if (getMatrixTriggerMode().forParent) {
+                    publishNotificationIfEnabled(STARTED, build, listener);
+                }
+                return true;
+            }
+
+            @Override
+            public boolean endBuild() throws InterruptedException, IOException {
+                if (getMatrixTriggerMode().forParent) {
+                    notifyOnBuildComplete(build, listener);
+                }
+                return true;
+            }
+        };
+    }
+
     @Extension
     public static class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
@@ -334,9 +367,22 @@ public class HipChatNotifier extends Notifier {
             this.sendAs = sendAs;
         }
 
+        /* Default notification messages for UI */
+        public String getStartJobMessageDefault() {
+            return Messages.JobStarted();
+        }
+
+        public String getCompleteJobMessageDefault() {
+            return Messages.JobCompleted();
+        }
+
         @Override
         public boolean isApplicable(Class<? extends AbstractProject> aClass) {
             return true;
+        }
+
+        public boolean isMatrixProject(Object project) {
+            return project instanceof MatrixProject;
         }
 
         @Override
