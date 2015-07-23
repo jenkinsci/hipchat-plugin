@@ -155,11 +155,24 @@ public class HipChatNotifier extends Notifier {
     }
 
     public String getRoom() {
-        return StringUtils.isBlank(room) ? getDescriptor().getRoom() : room;
+        return room;
     }
 
     public void setRoom(String room) {
         this.room = room;
+    }
+
+    /**
+     * Return the room name defined in the job configuration, or if that's empty return the room name from the global
+     * configuration.
+     * If the room name is parameterized, this will also try to resolve those parameters.
+     *
+     * @param build The current build for which we need to get the room.
+     * @return The room name tied to the current build.
+     */
+    public String getResolvedRoom(AbstractBuild<?, ?> build) {
+        return Util.replaceMacro(StringUtils.isBlank(room) ? getDescriptor().getRoom() : room,
+                build.getBuildVariableResolver());
     }
 
     public String getToken() {
@@ -222,8 +235,8 @@ public class HipChatNotifier extends Notifier {
             BuildListener listener) {
         if (isNotificationEnabled(notificationType)) {
             try {
-                getHipChatService().publish(notificationType.getMessage(build, this), notificationType.getColor());
-                listener.getLogger().println(Messages.NotificationSuccessful(getRoom()));
+                getHipChatService(build).publish(notificationType.getMessage(build, this), notificationType.getColor());
+                listener.getLogger().println(Messages.NotificationSuccessful(getResolvedRoom(build)));
             } catch (NotificationException ne) {
                 listener.getLogger().println(Messages.NotificationFailed(ne.getMessage()));
             }
@@ -251,10 +264,11 @@ public class HipChatNotifier extends Notifier {
         }
     }
 
-    private HipChatService getHipChatService() {
+    private HipChatService getHipChatService(AbstractBuild<?, ?> build) {
         DescriptorImpl desc = getDescriptor();
         String authToken = Util.fixEmpty(token) != null ? token : desc.getToken();
-        return getHipChatService(desc.getServer(), authToken, desc.isV2Enabled(), getRoom(), desc.getSendAs());
+        return getHipChatService(desc.getServer(), authToken, desc.isV2Enabled(), getResolvedRoom(build),
+                desc.getSendAs());
     }
 
     private static HipChatService getHipChatService(String server, String token, boolean v2Enabled, String room,
