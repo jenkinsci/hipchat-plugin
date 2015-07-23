@@ -127,6 +127,7 @@ public enum NotificationType {
         merged.put("CAUSE", cause);
         merged.put("CHANGES_OR_CAUSE", changes != null ? changes : cause);
         merged.put("CHANGES", changes);
+        merged.put("JOB_DISPLAY_NAME", build.getProject().getDisplayName());
         merged.put("PRINT_FULL_ENV", merged.toString());
         return merged;
     }
