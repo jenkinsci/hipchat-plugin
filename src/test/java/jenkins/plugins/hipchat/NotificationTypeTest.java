@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import hudson.EnvVars;
 import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
 import hudson.model.TaskListener;
 import hudson.model.User;
 import hudson.scm.ChangeLogSet;
@@ -36,6 +37,8 @@ import static org.mockito.Mockito.*;
 public class NotificationTypeTest {
     @Mock
     Jenkins jenkins;
+    @Mock
+    AbstractProject project;
 
     @Before
     public void setUp() throws Exception {
@@ -105,6 +108,8 @@ public class NotificationTypeTest {
 
     private AbstractBuild<?, ?> build() throws java.io.IOException, InterruptedException {
         AbstractBuild<?, ?> build = mock(AbstractBuild.class);
+        when(build.getProject()).thenReturn(project);
+        when(project.getDisplayName()).thenReturn("test-job");
         when(build.getUrl()).thenReturn("foo/123");
         when(build.getBuildVariables()).thenReturn(ImmutableMap.of(
                 "JOB_NAME", "test-job",
