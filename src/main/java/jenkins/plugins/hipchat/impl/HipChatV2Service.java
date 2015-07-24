@@ -9,10 +9,11 @@ import jenkins.plugins.hipchat.Messages;
 import jenkins.plugins.hipchat.exceptions.InvalidResponseCodeException;
 import jenkins.plugins.hipchat.exceptions.NotificationException;
 import net.sf.json.JSONObject;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.StringRequestEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
 
 public class HipChatV2Service extends HipChatService {
 
@@ -29,45 +30,46 @@ public class HipChatV2Service extends HipChatService {
         this.roomIds = roomIds == null ? DEFAULT_ROOMS : roomIds.split("\\s*,\\s*");
     }
 
+    @Override
     public void publish(String message, String color) throws NotificationException {
         publish(message, color, shouldNotify(color));
     }
 
+    @Override
     public void publish(String message, String color, boolean notify) throws NotificationException {
         for (String roomId : roomIds) {
             logger.log(Level.INFO, "Posting: {0} to {1}: {2}", new Object[]{roomId, message, color});
-            HttpClient client = getHttpClient();
+            CloseableHttpClient httpClient = getHttpClient();
+            CloseableHttpResponse httpResponse = null;
 
-            PostMethod post = null;
             try {
-                String url = "https://" + server + "/v2/room/" + Util.rawEncode(roomId) + "/notification";
-                post = new PostMethod(url);
-                post.getParams().setContentCharset("UTF-8");
-                post.addRequestHeader("Authorization", "Bearer " + token);
+                HttpPost post = new HttpPost("https://" + server + "/v2/room/" + Util.rawEncode(roomId)
+                        + "/notification");
+                post.addHeader("Authorization", "Bearer " + token);
 
                 JSONObject notification = new JSONObject();
                 notification.put("message", message);
                 notification.put("color", color);
                 notification.put("notify", notify);
-                post.setRequestEntity(new StringRequestEntity(notification.toString(), "application/json", "UTF-8"));
-                int responseCode = client.executeMethod(post);
-                if (responseCode != HttpStatus.SC_NO_CONTENT) {
+                post.setEntity(new StringEntity(notification.toString(), ContentType.APPLICATION_JSON));
+
+                httpResponse = httpClient.execute(post);
+                int responseCode = httpResponse.getStatusLine().getStatusCode();
+                // Always read response to ensure the inputstream is closed
+                String response = readResponse(httpResponse.getEntity());
+
+                if (responseCode != 204) {
                     if (logger.isLoggable(Level.WARNING)) {
                         logger.log(Level.WARNING, "HipChat post may have failed. ResponseCode: {0}, Response: {1}",
-                                new Object[]{responseCode, post.getResponseBodyAsString()});
+                                new Object[]{responseCode, response});
                         throw new InvalidResponseCodeException(responseCode);
                     }
                 }
-            } catch (IllegalArgumentException iae) {
-                logger.log(Level.WARNING, "Invalid argument provided", iae);
-                throw new NotificationException(Messages.IllegalArgument(iae.toString()));
             } catch (IOException ioe) {
                 logger.log(Level.WARNING, "An IO error occurred while posting HipChat notification", ioe);
                 throw new NotificationException(Messages.IOException(ioe.toString()));
             } finally {
-                if (post != null) {
-                    post.releaseConnection();
-                }
+                closeQuietly(httpResponse, httpClient);
             }
         }
     }

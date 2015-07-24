@@ -1,9 +1,8 @@
 package jenkins.plugins.hipchat.impl;
 
 import java.io.IOException;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.methods.PostMethod;
+import java.util.ArrayList;
+import java.util.List;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -11,6 +10,12 @@ import jenkins.plugins.hipchat.HipChatService;
 import jenkins.plugins.hipchat.Messages;
 import jenkins.plugins.hipchat.exceptions.InvalidResponseCodeException;
 import jenkins.plugins.hipchat.exceptions.NotificationException;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.message.BasicNameValuePair;
 
 public class HipChatV1Service extends HipChatService {
 
@@ -38,33 +43,35 @@ public class HipChatV1Service extends HipChatService {
     public void publish(String message, String color, boolean notify) throws NotificationException {
         for (String roomId : roomIds) {
             logger.log(Level.FINE, "Posting: {0} to {1}: {2} {3}", new Object[]{sendAs, roomId, message, color});
-            HttpClient client = getHttpClient();
-            String url = "https://" + server + "/v1/rooms/message";
-            PostMethod post = new PostMethod(url);
+            CloseableHttpClient httpClient = getHttpClient();
+            CloseableHttpResponse httpResponse = null;
 
             try {
-                post.addParameter("auth_token", token);
-                post.addParameter("from", sendAs);
-                post.addParameter("room_id", roomId);
-                post.addParameter("message", message);
-                post.addParameter("color", color);
-                post.addParameter("notify", notify ? "1" : "0");
-                post.getParams().setContentCharset("UTF-8");
-                int responseCode = client.executeMethod(post);
-                String response = post.getResponseBodyAsString();
-                if (responseCode != HttpStatus.SC_OK) {
+                HttpPost post = new HttpPost("https://" + server + "/v1/rooms/message");
+                List<NameValuePair> nvps = new ArrayList<NameValuePair>(6);
+                nvps.add(new BasicNameValuePair("auth_token", token));
+                nvps.add(new BasicNameValuePair("from", sendAs));
+                nvps.add(new BasicNameValuePair("room_id", roomId));
+                nvps.add(new BasicNameValuePair("message", message));
+                nvps.add(new BasicNameValuePair("color", color));
+                nvps.add(new BasicNameValuePair("notify", notify ? "1" : "0"));
+                post.setEntity(new UrlEncodedFormEntity(nvps, "UTF-8"));
+
+                httpResponse = httpClient.execute(post);
+                int responseCode = httpResponse.getStatusLine().getStatusCode();
+                // Always read response to ensure the inputstream is closed
+                String response = readResponse(httpResponse.getEntity());
+
+                if (responseCode != 200) {
                     logger.log(Level.WARNING, "HipChat post may have failed. ResponseCode: {0}, Response: {1}",
                             new Object[]{responseCode, response});
                     throw new InvalidResponseCodeException(responseCode);
                 }
-            } catch (IllegalArgumentException iae) {
-                logger.log(Level.WARNING, "Invalid argument provided", iae);
-                throw new NotificationException(Messages.IllegalArgument(iae.toString()));
             } catch (IOException ioe) {
                 logger.log(Level.WARNING, "An IO error occurred while posting HipChat notification", ioe);
                 throw new NotificationException(Messages.IOException(ioe.toString()));
             } finally {
-                post.releaseConnection();
+                closeQuietly(httpResponse, httpClient);
             }
         }
     }
