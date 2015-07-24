@@ -5,14 +5,13 @@ import java.io.Closeable;
 import java.io.IOException;
 import jenkins.model.Jenkins;
 import jenkins.plugins.hipchat.exceptions.NotificationException;
+import jenkins.plugins.hipchat.ext.ProxyRoutePlanner;
 import jenkins.plugins.hipchat.ext.TLSSocketFactory;
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpHost;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
 import org.apache.http.util.EntityUtils;
 
 public abstract class HipChatService {
@@ -33,7 +32,7 @@ public abstract class HipChatService {
             ProxyConfiguration proxy = Jenkins.getInstance().proxy;
 
             if (proxy != null) {
-                httpClientBuilder.setRoutePlanner(new DefaultProxyRoutePlanner(new HttpHost(proxy.name, proxy.port)));
+                httpClientBuilder.setRoutePlanner(new ProxyRoutePlanner(proxy));
             }
         }
 
