@@ -17,7 +17,7 @@
     <url>http://wiki.jenkins-ci.org/display/JENKINS/HipChat+Plugin</url>
 
     <properties>
-        <maven-compiler-plugin.version>3.2</maven-compiler-plugin.version>
+        <maven-compiler-plugin.version>3.3</maven-compiler-plugin.version>
         <powermock.version>1.6.1</powermock.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -41,7 +41,6 @@
         <connection>scm:git:ssh://github.com/jenkinsci/hipchat-plugin.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/jenkinsci/hipchat-plugin.git</developerConnection>
         <url>https://github.com/jenkinsci/hipchat-plugin</url>
-        <tag>HEAD</tag>
     </scm>
 
     <dependencyManagement>
@@ -117,11 +116,11 @@
                 </plugin>
                 <plugin>
                     <artifactId>maven-release-plugin</artifactId>
-                    <version>2.5.1</version>
+                    <version>2.5.2</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.18</version>
+                    <version>2.18.1</version>
                     <configuration>
                         <systemPropertyVariables>
                             <java.util.logging.config.file>${project.build.directory}/test-classes/logging.properties</java.util.logging.config.file>
