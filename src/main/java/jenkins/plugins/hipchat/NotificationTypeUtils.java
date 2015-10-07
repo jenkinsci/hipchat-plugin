@@ -39,18 +39,24 @@ public final class NotificationTypeUtils {
         }
         Set<String> authors = Sets.newHashSet();
         int changedFiles = 0;
-        for (Object o : build.getChangeSet().getItems()) {
-            ChangeLogSet.Entry entry = (ChangeLogSet.Entry) o;
-            LOGGER.log(FINEST, "Entry {0}", entry);
-            authors.add(entry.getAuthor().getDisplayName());
-            try {
-                changedFiles += entry.getAffectedFiles().size();
-            } catch (UnsupportedOperationException e) {
-                LOGGER.log(INFO, "Unable to collect the affected files for job {0}",
-                        build.getProject().getFullDisplayName());
-                return null;
+        try {
+            for (Object o : build.getChangeSet().getItems()) {
+                ChangeLogSet.Entry entry = (ChangeLogSet.Entry) o;
+                LOGGER.log(FINEST, "Entry {0}", entry);
+                authors.add(entry.getAuthor().getDisplayName());
+                try {
+                    changedFiles += entry.getAffectedFiles().size();
+                } catch (UnsupportedOperationException e) {
+                    LOGGER.log(INFO, "Unable to collect the affected files for job {0}",
+                            build.getProject().getFullDisplayName());
+                    return null;
+                }
             }
+        } catch (NullPointerException e) {
+            LOGGER.log(WARNING, "Null Pointer Exception caught while trying to compile Change Log");
+            return null;
         }
+
         if (changedFiles == 0) {
             LOGGER.log(FINE, "No changes detected");
             return null;
