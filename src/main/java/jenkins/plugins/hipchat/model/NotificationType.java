@@ -63,12 +63,6 @@ public enum NotificationType {
         protected String getStatus() {
             return Messages.Unstable();
         }
-    },
-    UNKNOWN("purple") {
-        @Override
-        protected String getStatus() {
-            throw new IllegalStateException();
-        }
     };
 
     private static final Logger LOGGER = Logger.getLogger(NotificationType.class.getName());
@@ -162,6 +156,6 @@ public enum NotificationType {
             }
         }
 
-        return UNKNOWN;
+        throw new IllegalStateException("Unable to determine notification type");
     }
 }
