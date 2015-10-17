@@ -61,9 +61,9 @@ public class NotificationTypeTest {
         HipChatNotifier notifier = builder()
                 .setMessageJobCompleted("i feel so $STATUS")
                 .build();
-        assertNotifierProduces(build(), notifier, SUCCESS, "i feel so Success");
-        assertNotifierProduces(build(), notifier, FAILURE, "i feel so <b>FAILURE</b>");
-        assertNotifierProduces(build(), notifier, NOT_BUILT, "i feel so Not built");
+        assertNotifierProduces(build(), notifier, SUCCESS, "i feel so " + Messages.Success());
+        assertNotifierProduces(build(), notifier, FAILURE, "i feel so " + Messages.Failure());
+        assertNotifierProduces(build(), notifier, NOT_BUILT, "i feel so " + Messages.NotBuilt());
     }
 
     @Test
@@ -96,15 +96,16 @@ public class NotificationTypeTest {
 
     private void testNormalConfiguration(AbstractBuild<?, ?> build, HipChatNotifier notifier) {
         String url = "(<a href=\"http://localhost:8080/jenkins/foo/123\">Open</a>";
-        String prefix = "test-job #33";
-        assertNotifierProduces(build, notifier, STARTED,prefix
-                + " Starting... (Started by changes from john.doe@example.com (1 file(s) changed)) " + url + ")");
-        assertNotifierProduces(build, notifier, ABORTED, prefix + " ABORTED after 42 sec " + url + ")");
-        assertNotifierProduces(build, notifier, SUCCESS, prefix + " Success after 42 sec " + url + ")");
-        assertNotifierProduces(build, notifier, FAILURE, prefix + " <b>FAILURE</b> after 42 sec " + url + ")");
-        assertNotifierProduces(build, notifier, NOT_BUILT, prefix + " Not built after 42 sec " + url + ")");
-        assertNotifierProduces(build, notifier, BACK_TO_NORMAL, prefix + " Back to normal after 42 sec " + url + ")");
-        assertNotifierProduces(build, notifier, UNSTABLE, prefix + " UNSTABLE after 42 sec " + url + ")");
+        String prefix = "test-job #33 ";
+        assertNotifierProduces(build, notifier, STARTED, prefix + Messages.Started() + " ("
+                + Messages.StartWithChanges("john.doe@example.com", "1") + ") " + url + ")");
+        assertNotifierProduces(build, notifier, ABORTED, prefix + Messages.Aborted() + " after 42 sec " + url + ")");
+        assertNotifierProduces(build, notifier, SUCCESS, prefix + Messages.Success() + " after 42 sec " + url + ")");
+        assertNotifierProduces(build, notifier, FAILURE, prefix + Messages.Failure() + " after 42 sec " + url + ")");
+        assertNotifierProduces(build, notifier, NOT_BUILT, prefix + Messages.NotBuilt() + " after 42 sec " + url + ")");
+        assertNotifierProduces(build, notifier, BACK_TO_NORMAL, prefix + Messages.BackToNormal() + " after 42 sec "
+                + url + ")");
+        assertNotifierProduces(build, notifier, UNSTABLE, prefix + Messages.Unstable() + " after 42 sec " + url + ")");
     }
 
     private AbstractBuild<?, ?> build() throws java.io.IOException, InterruptedException {
