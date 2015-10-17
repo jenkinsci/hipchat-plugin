@@ -1,5 +1,7 @@
 package jenkins.plugins.hipchat;
 
+import jenkins.plugins.hipchat.model.MatrixTriggerMode;
+
 public class HipChatNotifierBuilder {
     private String token = "token";
     private String room = "room";

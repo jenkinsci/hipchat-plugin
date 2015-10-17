@@ -1,6 +1,6 @@
 package jenkins.plugins.hipchat;
 
-import static jenkins.plugins.hipchat.NotificationType.STARTED;
+import static jenkins.plugins.hipchat.model.NotificationType.STARTED;
 
 import hudson.Extension;
 import hudson.Launcher;
@@ -25,6 +25,9 @@ import jenkins.model.Jenkins;
 import jenkins.plugins.hipchat.exceptions.NotificationException;
 import jenkins.plugins.hipchat.impl.HipChatV1Service;
 import jenkins.plugins.hipchat.impl.HipChatV2Service;
+import jenkins.plugins.hipchat.model.MatrixTriggerMode;
+import jenkins.plugins.hipchat.model.Notification;
+import jenkins.plugins.hipchat.model.NotificationType;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;

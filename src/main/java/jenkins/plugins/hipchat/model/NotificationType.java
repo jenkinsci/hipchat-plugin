@@ -1,4 +1,4 @@
-package jenkins.plugins.hipchat;
+package jenkins.plugins.hipchat.model;
 
 import com.google.common.base.Preconditions;
 import hudson.EnvVars;
@@ -11,6 +11,9 @@ import hudson.util.VariableResolver;
 import java.io.IOException;
 import java.util.Map;
 import java.util.logging.Logger;
+import jenkins.plugins.hipchat.HipChatNotifier;
+import jenkins.plugins.hipchat.Messages;
+import jenkins.plugins.hipchat.NotificationTypeUtils;
 
 import static com.google.common.base.Throwables.propagate;
 import static com.google.common.collect.Maps.newHashMap;

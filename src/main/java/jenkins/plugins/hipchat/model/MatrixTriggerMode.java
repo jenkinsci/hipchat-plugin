@@ -1,8 +1,9 @@
 /**
  * Borrowed from https://github.com/jenkinsci/email-ext-plugin
  */
-package jenkins.plugins.hipchat;
+package jenkins.plugins.hipchat.model;
 
+import jenkins.plugins.hipchat.Messages;
 import org.jvnet.localizer.Localizable;
 
 /**

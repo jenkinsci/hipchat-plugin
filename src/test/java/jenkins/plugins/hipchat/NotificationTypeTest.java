@@ -1,5 +1,6 @@
 package jenkins.plugins.hipchat;
 
+import jenkins.plugins.hipchat.model.NotificationType;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -27,7 +28,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 
 import static jenkins.plugins.hipchat.HipChatNotifierBuilder.builder;
-import static jenkins.plugins.hipchat.NotificationType.*;
+import static jenkins.plugins.hipchat.model.NotificationType.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.mockito.Mockito.*;
