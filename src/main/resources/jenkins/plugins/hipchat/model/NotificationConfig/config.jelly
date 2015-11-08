@@ -1,0 +1,23 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+    <tr>
+        <td style="width: 5%">
+            <f:checkbox field="notifyEnabled" />
+        </td>
+        <td style="width: 15%">
+            <f:enum field="notificationType">
+                ${it.getStatus()}
+            </f:enum>
+        </td>
+        <td style="width: 10%">
+            <f:enum field="color">
+                ${it.toString()}
+            </f:enum>
+        </td>
+        <td style="width: 60%">
+            <f:textbox field="messageTemplate" />
+        </td>
+        <td style="width: 10%">
+            <f:repeatableDeleteButton />
+        </td>
+    </tr>
+</j:jelly>

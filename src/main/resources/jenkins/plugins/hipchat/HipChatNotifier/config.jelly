@@ -7,36 +7,6 @@
         <f:textbox name="hipchat.room" value="${instance.room}" />
     </f:entry>
 
-    <f:section title="${%Notification settings}">
-        <f:entry title="${%Notify Build Start}">
-            <f:checkbox name="hipchat.startNotification" checked="${instance.startNotification}" />
-        </f:entry>
-
-        <f:entry title="${%Notify Aborted}">
-            <f:checkbox name="hipchat.notifyAborted" checked="${instance.notifyAborted}" />
-        </f:entry>
-
-        <f:entry title="${%Notify Failure}">
-            <f:checkbox name="hipchat.notifyFailure" checked="${instance.notifyFailure}" />
-        </f:entry>
-
-        <f:entry title="${%Notify Not Built}">
-            <f:checkbox name="hipchat.notifyNotBuilt" checked="${instance.notifyNotBuilt}" />
-        </f:entry>
-
-        <f:entry title="${%Notify Success}">
-            <f:checkbox name="hipchat.notifySuccess" checked="${instance.notifySuccess}" />
-        </f:entry>
-
-        <f:entry title="${%Notify Unstable}">
-            <f:checkbox name="hipchat.notifyUnstable" checked="${instance.notifyUnstable}" />
-        </f:entry>
-
-        <f:entry title="${%Notify Back To Normal}">
-            <f:checkbox name="hipchat.notifyBackToNormal" checked="${instance.notifyBackToNormal}" />
-        </f:entry>
-    </f:section>
-
     <j:if test="${descriptor.isMatrixProject(it)}">
       <f:entry title="${%Trigger for matrix projects}" field="matrixTriggerMode">
           <f:enum field="matrixTriggerMode">
@@ -44,6 +14,23 @@
           </f:enum>
       </f:entry>
     </j:if>
+
+    <f:entry title="${%Notifications}" help="/plugin/hipchat/help-projectConfig-hipChatNotifications.jelly" field="notifications">
+        <table width="100%">
+            <tr style="text-align:left">
+                <th width="5%">${%Notify Room}</th>
+                <th width="15%">${%Notification Type}</th>
+                <th width="10%">${%Color}</th>
+                <th width="60%">${%Message template}</th>
+                <th width="10%"></th>
+            </tr>
+        </table>
+        <f:repeatable field="notifications">
+            <table style="width:100%">
+                <st:include page="config.jelly" class="${descriptor.clazz}" />
+            </table>
+        </f:repeatable>
+    </f:entry>
 
     <f:section title="${%Message Templates}">
         <f:entry title="${%Job started}" help="/plugin/hipchat/help-projectConfig-hipChatMessages.html">

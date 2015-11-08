@@ -1,6 +1,7 @@
 package jenkins.plugins.hipchat;
 
-import static jenkins.plugins.hipchat.model.NotificationType.STARTED;
+import static jenkins.plugins.hipchat.utils.GuiceUtils.*;
+import static jenkins.plugins.hipchat.model.NotificationType.*;
 
 import hudson.Extension;
 import hudson.Launcher;
@@ -25,8 +26,9 @@ import jenkins.model.Jenkins;
 import jenkins.plugins.hipchat.exceptions.NotificationException;
 import jenkins.plugins.hipchat.impl.HipChatV1Service;
 import jenkins.plugins.hipchat.impl.HipChatV2Service;
+import jenkins.plugins.hipchat.model.Color;
 import jenkins.plugins.hipchat.model.MatrixTriggerMode;
-import jenkins.plugins.hipchat.model.Notification;
+import jenkins.plugins.hipchat.model.NotificationConfig;
 import jenkins.plugins.hipchat.model.NotificationType;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
@@ -36,7 +38,10 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.Exported;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
+import jenkins.plugins.hipchat.utils.BuildUtils;
 
 @SuppressWarnings({"unchecked"})
 public class HipChatNotifier extends Notifier implements MatrixAggregatable {
@@ -44,90 +49,53 @@ public class HipChatNotifier extends Notifier implements MatrixAggregatable {
     private static final Logger logger = Logger.getLogger(HipChatNotifier.class.getName());
     private String token;
     private String room;
-    private boolean startNotification;
-    private boolean notifySuccess;
-    private boolean notifyAborted;
-    private boolean notifyNotBuilt;
-    private boolean notifyUnstable;
-    private boolean notifyFailure;
-    private boolean notifyBackToNormal;
+    private transient boolean startNotification;
+    private transient boolean notifySuccess;
+    private transient boolean notifyAborted;
+    private transient boolean notifyNotBuilt;
+    private transient boolean notifyUnstable;
+    private transient boolean notifyFailure;
+    private transient boolean notifyBackToNormal;
+    private List<NotificationConfig> notifications;
     private MatrixTriggerMode matrixTriggerMode;
 
     private String startJobMessage;
     private String completeJobMessage;
 
     @DataBoundConstructor
-    public HipChatNotifier(String token, String room, boolean startNotification, boolean notifySuccess,
-            boolean notifyAborted, boolean notifyNotBuilt, boolean notifyUnstable, boolean notifyFailure,
-            boolean notifyBackToNormal, MatrixTriggerMode matrixTriggerMode, String startJobMessage,
-            String completeJobMessage) {
+    public HipChatNotifier(String token, String room, List<NotificationConfig> notifications,
+            MatrixTriggerMode matrixTriggerMode, String startJobMessage, String completeJobMessage) {
         this.token = token;
         this.room = room;
-        this.startNotification = startNotification;
-        this.notifySuccess = notifySuccess;
-        this.notifyAborted = notifyAborted;
-        this.notifyNotBuilt = notifyNotBuilt;
-        this.notifyUnstable = notifyUnstable;
-        this.notifyFailure = notifyFailure;
-        this.notifyBackToNormal = notifyBackToNormal;
+        this.notifications = notifications;
         this.matrixTriggerMode = matrixTriggerMode;
 
         this.startJobMessage = startJobMessage;
         this.completeJobMessage = completeJobMessage;
     }
 
-    /* notification enabled disabled setters/getters */
-
-    public boolean isStartNotification() {
-        return startNotification;
-    }
-
     public void setStartNotification(boolean startNotification) {
         this.startNotification = startNotification;
-    }
-
-    public boolean isNotifySuccess() {
-        return notifySuccess;
     }
 
     public void setNotifySuccess(boolean notifySuccess) {
         this.notifySuccess = notifySuccess;
     }
 
-    public boolean isNotifyAborted() {
-        return notifyAborted;
-    }
-
     public void setNotifyAborted(boolean notifyAborted) {
         this.notifyAborted = notifyAborted;
-    }
-
-    public boolean isNotifyNotBuilt() {
-        return notifyNotBuilt;
     }
 
     public void setNotifyNotBuilt(boolean notifyNotBuilt) {
         this.notifyNotBuilt = notifyNotBuilt;
     }
 
-    public boolean isNotifyUnstable() {
-        return notifyUnstable;
-    }
-
     public void setNotifyUnstable(boolean notifyUnstable) {
         this.notifyUnstable = notifyUnstable;
     }
 
-    public boolean isNotifyFailure() {
-        return notifyFailure;
-    }
-
     public void setNotifyFailure(boolean notifyFailure) {
         this.notifyFailure = notifyFailure;
-    }
-
-    public boolean isNotifyBackToNormal() {
-        return notifyBackToNormal;
     }
 
     public void setNotifyBackToNormal(boolean notifyBackToNormal) {
@@ -142,6 +110,13 @@ public class HipChatNotifier extends Notifier implements MatrixAggregatable {
         this.matrixTriggerMode = matrixTriggerMode;
     }
 
+    public void setNotifications(List<NotificationConfig> notifications) {
+        this.notifications = notifications;
+    }
+
+    public List<NotificationConfig> getNotifications() {
+        return notifications;
+    }
     /* notification message configurations */
 
     public String getStartJobMessage() {
@@ -166,6 +141,34 @@ public class HipChatNotifier extends Notifier implements MatrixAggregatable {
 
     public void setRoom(String room) {
         this.room = room;
+    }
+
+    public Object readResolve() {
+        if (notifications == null) {
+            notifications = new ArrayList<NotificationConfig>(7);
+            if (startNotification) {
+                notifications.add(new NotificationConfig(false, STARTED, Color.GREEN, null));
+            }
+            if (notifySuccess) {
+                notifications.add(new NotificationConfig(false, SUCCESS, Color.GREEN, null));
+            }
+            if (notifyAborted) {
+                notifications.add(new NotificationConfig(true, ABORTED, Color.GRAY, null));
+            }
+            if (notifyNotBuilt) {
+                notifications.add(new NotificationConfig(true, NOT_BUILT, Color.GRAY, null));
+            }
+            if (notifyUnstable) {
+                notifications.add(new NotificationConfig(true, UNSTABLE, Color.YELLOW, null));
+            }
+            if (notifyFailure) {
+                notifications.add(new NotificationConfig(true, FAILURE, Color.RED, null));
+            }
+            if (notifyBackToNormal) {
+                notifications.add(new NotificationConfig(false, BACK_TO_NORMAL, Color.GREEN, null));
+            }
+        }
+        return this;
     }
 
     /**
@@ -229,27 +232,29 @@ public class HipChatNotifier extends Notifier implements MatrixAggregatable {
     private void notifyOnBuildComplete(AbstractBuild<?, ?> build, BuildListener listener) {
         logger.fine("Creating build completed notification");
         Result result = build.getResult();
-        Result previousResult = findPreviousBuildResult(build);
+        Result previousResult = get(BuildUtils.class).findPreviousBuildResult(build);
 
         NotificationType notificationType = NotificationType.fromResults(previousResult, result);
         publishNotificationIfEnabled(notificationType, build, listener);
     }
 
-    private Result findPreviousBuildResult(AbstractBuild<?,?> build) {
-        do {
-            build = build.getPreviousBuild();
-            if (build == null || build.isBuilding()) {
-                return null;
-            }
-        } while (build.getResult() == Result.ABORTED || build.getResult() == Result.NOT_BUILT);
-        return build.getResult();
-    }
-
     private void publishNotificationIfEnabled(NotificationType notificationType, AbstractBuild<?, ?> build,
             BuildListener listener) {
-        if (isNotificationEnabled(notificationType)) {
+        NotificationConfig notificationConfig = getNotificationConfig(notificationType);
+        if (notificationConfig != null) {
+            String messageTemplate = Util.fixEmpty(notificationConfig.getMessageTemplate());
+            if (messageTemplate == null) {
+                if (notificationType.isStartType()) {
+                    messageTemplate = Util.fixEmpty(getStartJobMessage()) == null
+                            ? getDescriptor().getStartJobMessageDefault() : getStartJobMessage();
+                } else {
+                    messageTemplate = Util.fixEmpty(getCompleteJobMessage()) == null
+                            ? getDescriptor().getCompleteJobMessageDefault() : getCompleteJobMessage();
+                }
+            }
+
             try {
-                getHipChatService(build).publish(notificationType.getMessage(build, this), notificationType.getColor());
+                getHipChatService(build).publish(notificationConfig, notificationType.getMessage(build, messageTemplate));
                 listener.getLogger().println(Messages.NotificationSuccessful(getResolvedRoom(build)));
             } catch (NotificationException ne) {
                 listener.getLogger().println(Messages.NotificationFailed(ne.getMessage()));
@@ -257,25 +262,15 @@ public class HipChatNotifier extends Notifier implements MatrixAggregatable {
         }
     }
 
-    private boolean isNotificationEnabled(NotificationType type) {
-        switch (type) {
-            case ABORTED:
-                return notifyAborted;
-            case BACK_TO_NORMAL:
-                return notifyBackToNormal;
-            case FAILURE:
-                return notifyFailure;
-            case NOT_BUILT:
-                return notifyNotBuilt;
-            case STARTED:
-                return startNotification;
-            case SUCCESS:
-                return notifySuccess;
-            case UNSTABLE:
-                return notifyUnstable;
-            default:
-                return false;
+    private NotificationConfig getNotificationConfig(NotificationType notificationType) {
+        List<NotificationConfig> configs = Util.fixNull(notifications).isEmpty()
+                ? Util.fixNull(getDescriptor().getDefaultNotifications()) : notifications;
+        for (NotificationConfig notificationConfig : configs) {
+            if (notificationType.equals(notificationConfig.getNotificationType())) {
+                return notificationConfig;
+            }
         }
+        return null;
     }
 
     private HipChatService getHipChatService(AbstractBuild<?, ?> build) {
@@ -324,6 +319,7 @@ public class HipChatNotifier extends Notifier implements MatrixAggregatable {
         private boolean v2Enabled = false;
         private String room;
         private String sendAs = "Jenkins";
+        private List<NotificationConfig> defaultNotifications;
         private static int testNotificationCount = 0;
 
         public DescriptorImpl() {
@@ -368,6 +364,14 @@ public class HipChatNotifier extends Notifier implements MatrixAggregatable {
 
         public void setSendAs(String sendAs) {
             this.sendAs = sendAs;
+        }
+
+        public List<NotificationConfig> getDefaultNotifications() {
+            return defaultNotifications;
+        }
+
+        public void setDefaultNotifications(List<NotificationConfig> defaultNotifications) {
+            this.defaultNotifications = defaultNotifications;
         }
 
         /* Default notification messages for UI */

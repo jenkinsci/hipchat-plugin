@@ -15,6 +15,22 @@
         <f:entry title="${%Send As}" help="/plugin/hipchat/help-globalConfig-hipChatSendAs.html" field="sendAs">
             <f:textbox default="Jenkins" />
         </f:entry>
+        <f:entry title="${%Default notifications}" help="/plugin/hipchat/help-globalConfig-hipChatDefaultNotifications.html" field="defaultNotifications">
+            <table width="100%">
+                <tr style="text-align:left">
+                    <th width="5%">${%Notify Room}</th>
+                    <th width="15%">${%Notification Type}</th>
+                    <th width="10%">${%Color}</th>
+                    <th width="60%">${%Message template}</th>
+                    <th width="10%"></th>
+                </tr>
+            </table>
+            <f:repeatable field="defaultNotifications">
+                <table style="width:100%">
+                    <st:include page="config.jelly" class="${descriptor.clazz}" />
+                </table>
+            </f:repeatable>
+        </f:entry>
         <f:validateButton method="sendTestNotification" title="${%Test configuration}" progress="${%Testing...}"
                           with="server,token,v2Enabled,room,sendAs" />
     </f:section>

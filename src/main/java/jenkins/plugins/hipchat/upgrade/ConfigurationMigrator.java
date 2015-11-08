@@ -30,6 +30,8 @@ public class ConfigurationMigrator extends ItemListener {
                     notifier.setNotifyNotBuilt(property.getNotifyNotBuilt());
                     notifier.setNotifySuccess(property.getNotifySuccess());
                     notifier.setNotifyUnstable(property.getNotifyUnstable());
+                    notifier.setNotifications(null);
+                    notifier.readResolve();
                 }
                 try {
                     item.removeProperty(HipChatJobProperty.class);

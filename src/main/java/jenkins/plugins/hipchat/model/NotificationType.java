@@ -1,142 +1,96 @@
 package jenkins.plugins.hipchat.model;
 
-import com.google.common.base.Preconditions;
-import hudson.EnvVars;
+import static hudson.Util.replaceMacro;
+import static jenkins.plugins.hipchat.utils.GuiceUtils.*;
+
+import com.google.common.annotations.VisibleForTesting;
 import hudson.model.AbstractBuild;
 import hudson.model.Result;
-import hudson.Util;
-import hudson.util.LogTaskListener;
 import hudson.util.VariableResolver;
-
-import java.io.IOException;
 import java.util.Map;
-import java.util.logging.Logger;
-import jenkins.plugins.hipchat.HipChatNotifier;
+import jenkins.model.Jenkins;
 import jenkins.plugins.hipchat.Messages;
-import jenkins.plugins.hipchat.NotificationTypeUtils;
-
-import static com.google.common.base.Throwables.propagate;
-import static com.google.common.collect.Maps.newHashMap;
-import static hudson.Util.replaceMacro;
-import static java.util.logging.Level.INFO;
+import jenkins.plugins.hipchat.utils.BuildUtils;
 
 public enum NotificationType {
 
-    STARTED("green", true) {
-        @Override
-        protected String getStatus() {
-            return Messages.Started();
-        }
-    },
-    ABORTED("gray") {
-        @Override
-        protected String getStatus() {
-            return Messages.Aborted();
-        }
-    },
-    SUCCESS("green") {
-        @Override
-        protected String getStatus() {
-            return Messages.Success();
-        }
-    },
-    FAILURE("red") {
-        @Override
-        protected String getStatus() {
-            return Messages.Failure();
-        }
-    },
-    NOT_BUILT("gray") {
-        @Override
-        protected String getStatus() {
-            return Messages.NotBuilt();
-        }
-    },
-    BACK_TO_NORMAL("green") {
-        @Override
-        protected String getStatus() {
-            return Messages.BackToNormal();
-        }
-    },
-    UNSTABLE("yellow") {
-        @Override
-        protected String getStatus() {
-            return Messages.Unstable();
-        }
-    };
+    STARTED(true) {
 
-    private static final Logger LOGGER = Logger.getLogger(NotificationType.class.getName());
-    private final String color;
-    private final boolean isStartType;
+                @Override
+                public String getStatus() {
+                    return Messages.Started();
+                }
+            },
+    ABORTED {
 
-    private NotificationType(String color, boolean isStartType) {
-        this.color = color;
-        this.isStartType = isStartType;
+                @Override
+                public String getStatus() {
+                    return Messages.Aborted();
+                }
+            },
+    SUCCESS {
+
+                @Override
+                public String getStatus() {
+                    return Messages.Success();
+                }
+            },
+    FAILURE {
+
+                @Override
+                public String getStatus() {
+                    return Messages.Failure();
+                }
+            },
+    NOT_BUILT {
+
+                @Override
+                public String getStatus() {
+                    return Messages.NotBuilt();
+                }
+            },
+    BACK_TO_NORMAL {
+
+                @Override
+                public String getStatus() {
+                    return Messages.BackToNormal();
+                }
+            },
+    UNSTABLE {
+
+                @Override
+                public String getStatus() {
+                    return Messages.Unstable();
+                }
+            };
+
+    private final boolean startType;
+
+    private NotificationType() {
+        this(false);
     }
 
-    private NotificationType(String color) {
-        this(color, false);
+    private NotificationType(boolean startType) {
+        this.startType = startType;
     }
 
-    protected abstract String getStatus();
+    public abstract String getStatus();
 
-    public String getColor() {
-        return color;
+    public boolean isStartType() {
+        return startType;
     }
 
-    public final String getMessage(AbstractBuild<?, ?> build, HipChatNotifier notifier) {
-        String format = getTemplateFor(notifier);
-        Map<String, String> messageVariables = collectParametersFor(build);
-
-        return replaceMacro(format, new VariableResolver.ByMap<String>(messageVariables));
+    public final String getMessage(AbstractBuild<?, ?> build, String messageTemplate) {
+        return getMessage(get(BuildUtils.class), Jenkins.getInstance(), build, messageTemplate);
     }
 
-    private String getTemplateFor(HipChatNotifier notifier) {
-        String userConfig;
-        String defaultConfig;
-        if (isStartType) {
-            userConfig = notifier.getStartJobMessage();
-            defaultConfig = Messages.JobStarted();
-        } else {
-            userConfig = notifier.getCompleteJobMessage();
-            defaultConfig = Messages.JobCompleted();
-        }
+    @VisibleForTesting
+    String getMessage(BuildUtils buildUtils, Jenkins jenkins, AbstractBuild<?, ?> build, String messageTemplate) {
+        Map<String, String> messageVariables = buildUtils.collectParametersFor(jenkins, build);
+        messageVariables.put("STATUS", getStatus());
+        messageVariables.put("PRINT_FULL_ENV", messageVariables.toString());
 
-        if (Util.fixEmptyAndTrim(userConfig) == null) {
-            Preconditions.checkNotNull(defaultConfig, "Default template not set for %s", this);
-            return defaultConfig;
-        } else {
-            return userConfig;
-        }
-    }
-
-    private Map<String, String> collectParametersFor(AbstractBuild<?, ?> build) {
-        Map<String, String> merged = newHashMap();
-        merged.putAll(build.getBuildVariables());
-        merged.putAll(getEnvVars(build));
-
-        String cause = NotificationTypeUtils.getCause(build);
-        String changes = NotificationTypeUtils.getChanges(build);
-
-        merged.put("STATUS", getStatus());
-        merged.put("DURATION", build.getDurationString());
-        merged.put("URL", NotificationTypeUtils.getUrl(build));
-        merged.put("CAUSE", cause);
-        merged.put("CHANGES_OR_CAUSE", changes != null ? changes : cause);
-        merged.put("CHANGES", changes);
-        merged.put("JOB_DISPLAY_NAME", build.getProject().getDisplayName());
-        merged.put("PRINT_FULL_ENV", merged.toString());
-        return merged;
-    }
-
-    private EnvVars getEnvVars(AbstractBuild<?, ?> build) {
-        try {
-            return build.getEnvironment(new LogTaskListener(LOGGER, INFO));
-        } catch (IOException e) {
-            throw propagate(e);
-        } catch (InterruptedException e) {
-            throw propagate(e);
-        }
+        return replaceMacro(messageTemplate, new VariableResolver.ByMap<String>(messageVariables));
     }
 
     public static final NotificationType fromResults(Result previousResult, Result result) {

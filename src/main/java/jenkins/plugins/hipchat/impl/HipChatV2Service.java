@@ -31,14 +31,9 @@ public class HipChatV2Service extends HipChatService {
     }
 
     @Override
-    public void publish(String message, String color) throws NotificationException {
-        publish(message, color, shouldNotify(color));
-    }
-
-    @Override
     public void publish(String message, String color, boolean notify) throws NotificationException {
         for (String roomId : roomIds) {
-            logger.log(Level.INFO, "Posting: {0} to {1}: {2}", new Object[]{roomId, message, color});
+            logger.log(Level.INFO, "Posting to {0}: {1} {2}", new Object[]{roomId, message, color});
             CloseableHttpClient httpClient = getHttpClient();
             CloseableHttpResponse httpResponse = null;
 
@@ -72,9 +67,5 @@ public class HipChatV2Service extends HipChatService {
                 closeQuietly(httpResponse, httpClient);
             }
         }
-    }
-
-    private boolean shouldNotify(String color) {
-        return !color.equalsIgnoreCase("green");
     }
 }
