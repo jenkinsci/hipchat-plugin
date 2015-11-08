@@ -1,7 +1,7 @@
 package jenkins.plugins.hipchat.utils;
 
 import static com.google.common.base.Throwables.propagate;
-import static com.google.common.collect.Maps.newHashMap;
+import static com.google.common.collect.Maps.*;
 import static java.util.logging.Level.*;
 
 import com.google.common.collect.Sets;
@@ -11,6 +11,7 @@ import hudson.model.CauseAction;
 import hudson.model.Result;
 import hudson.model.User;
 import hudson.scm.ChangeLogSet;
+import hudson.tasks.test.AbstractTestResultAction;
 import hudson.util.LogTaskListener;
 import java.io.IOException;
 import java.util.Map;
@@ -40,6 +41,7 @@ public class BuildUtils {
         Map<String, String> merged = newHashMap();
         merged.putAll(build.getBuildVariables());
         merged.putAll(getEnvironmentVariables(build));
+        merged.putAll(getTestData(build));
 
         String cause = getCause(build);
         String changes = getChanges(build);
@@ -102,5 +104,15 @@ public class BuildUtils {
         }
 
         return Messages.StartWithChanges(StringUtils.join(authors, ", "), changedFiles);
+    }
+
+    private Map<String, String> getTestData(AbstractBuild<?, ?> build) {
+        Map<String, String> results = newHashMapWithExpectedSize(2);
+        AbstractTestResultAction testResults = build.getAction(AbstractTestResultAction.class);
+        if (testResults != null) {
+            results.put("FAILED_TEST_COUNT", String.valueOf(testResults.getFailCount()));
+            results.put("TEST_COUNT", String.valueOf(testResults.getTotalCount()));
+        }
+        return results;
     }
 }

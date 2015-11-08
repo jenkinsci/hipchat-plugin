@@ -14,6 +14,7 @@ import hudson.model.TaskListener;
 import hudson.model.User;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.Entry;
+import hudson.tasks.test.AbstractTestResultAction;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
@@ -42,6 +43,8 @@ public class BuildUtilsTest {
     private AbstractProject mockProject;
     @Mock
     private ItemGroup mockItemGroup;
+    @Mock
+    private AbstractTestResultAction mockTestResults;
     private final BuildUtils buildUtils = new BuildUtils();
 
     @Test
@@ -179,6 +182,19 @@ public class BuildUtilsTest {
         Map<String, String> collected = buildUtils.collectParametersFor(jenkins, build);
 
         assertThat(collected).containsEntry("JOB_DISPLAY_NAME", "test project");
+    }
+
+    @Test
+    public void collectedParametersContainTestDetails() throws Exception {
+        setupMocks();
+        given(mockTestResults.getFailCount()).willReturn(13);
+        given(mockTestResults.getTotalCount()).willReturn(21);
+        given(build.getAction(eq(AbstractTestResultAction.class))).willReturn(mockTestResults);
+
+        Map<String, String> collected = buildUtils.collectParametersFor(jenkins, build);
+
+        assertThat(collected).containsEntry("FAILED_TEST_COUNT", "13");
+        assertThat(collected).containsEntry("TEST_COUNT", "21");
     }
 
     private class FakeChangeLogSet extends ChangeLogSet {
