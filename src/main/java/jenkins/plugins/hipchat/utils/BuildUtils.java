@@ -9,6 +9,7 @@ import hudson.EnvVars;
 import hudson.model.AbstractBuild;
 import hudson.model.CauseAction;
 import hudson.model.Result;
+import hudson.model.User;
 import hudson.scm.ChangeLogSet;
 import hudson.util.LogTaskListener;
 import java.io.IOException;
@@ -81,7 +82,12 @@ public class BuildUtils {
         for (Object o : build.getChangeSet().getItems()) {
             ChangeLogSet.Entry entry = (ChangeLogSet.Entry) o;
             LOGGER.log(FINEST, "Entry {0}", entry);
-            authors.add(entry.getAuthor().getDisplayName());
+            User author = entry.getAuthor();
+            if (author == null) {
+                //author may be null in certain cases with git
+                author = User.getUnknown();
+            }
+            authors.add(author.getDisplayName());
             try {
                 changedFiles += entry.getAffectedFiles().size();
             } catch (UnsupportedOperationException e) {
