@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+    <f:entry field="message" title="Message">
+        <f:textbox/>
+    </f:entry>
+    <f:entry field="color" title="Color">
+        <f:select />
+    </f:entry>
+    <f:entry field="notify">
+        <f:checkbox title="Notify" default="false"/>
+    </f:entry>
+    <f:advanced>
+        <f:entry field="server" title="HipChat Server">
+            <f:textbox />
+        </f:entry>
+        <f:entry field="v2enabled">
+            <f:checkbox title="Use v2 API" default="true"/>
+        </f:entry>
+        <f:entry field="token" title="API Token">
+            <f:textbox />
+        </f:entry>
+        <f:entry field="room" title="Room">
+            <f:textbox />
+        </f:entry>
+        <f:entry field="sendAs" title="Send As">
+            <f:textbox />
+        </f:entry>
+    </f:advanced>
+</j:jelly>

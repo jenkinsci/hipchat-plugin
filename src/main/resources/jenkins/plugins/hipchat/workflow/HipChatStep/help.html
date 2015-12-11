@@ -1,0 +1,11 @@
+<div>
+    Simple step for sending a HipChat message.<br>
+    Use the advanced settings to override the HipChat Plugin global configuration to include: HipChat Server, API Token, API Version (1 or 2) and Send As (v1 API only).<br>
+    Please see the HipChat Plugin global configuration for more details on the fields.
+
+    Usage Example:<br>
+    <code>
+        def cause = currentBuild.rawBuild.getCause(Cause.UserIdCause)<br>
+        hipchat "${env.JOB_NAME} ${env.BUILD_NUMBER} Started by ${cause.userId}"
+    </code>
+</div>
