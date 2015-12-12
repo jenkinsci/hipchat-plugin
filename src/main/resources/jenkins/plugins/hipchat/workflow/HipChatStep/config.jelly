@@ -4,8 +4,8 @@
     <f:entry field="message" title="Message">
         <f:textbox/>
     </f:entry>
-    <f:entry field="color" title="Color">
-        <f:select />
+    <f:entry field="color" title="${%Color}">
+        <f:enum>${it}</f:enum>
     </f:entry>
     <f:entry field="notify">
         <f:checkbox title="Notify" default="false"/>
@@ -25,6 +25,9 @@
         </f:entry>
         <f:entry field="sendAs" title="Send As">
             <f:textbox />
+        </f:entry>
+        <f:entry field="failOnError">
+            <f:checkbox title="Fail On Error" default="false"/>
         </f:entry>
     </f:advanced>
 </j:jelly>

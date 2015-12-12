@@ -3,13 +3,11 @@ package jenkins.plugins.hipchat.workflow;
 import hudson.AbortException;
 import hudson.Extension;
 import hudson.model.TaskListener;
-import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
 import jenkins.plugins.hipchat.HipChatNotifier;
 import jenkins.plugins.hipchat.HipChatService;
 import jenkins.plugins.hipchat.Messages;
-import jenkins.plugins.hipchat.impl.HipChatV1Service;
-import jenkins.plugins.hipchat.impl.HipChatV2Service;
+import jenkins.plugins.hipchat.exceptions.NotificationException;
 import jenkins.plugins.hipchat.model.Color;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
@@ -21,7 +19,6 @@ import org.kohsuke.stapler.DataBoundSetter;
 
 import javax.annotation.Nonnull;
 import javax.inject.Inject;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class HipChatStep extends AbstractStepImpl {
@@ -31,7 +28,7 @@ public class HipChatStep extends AbstractStepImpl {
     public final String message;
 
     @DataBoundSetter
-    public String color;
+    public Color color;
 
     @DataBoundSetter
     public String token;
@@ -50,6 +47,9 @@ public class HipChatStep extends AbstractStepImpl {
 
     @DataBoundSetter
     public String sendAs;
+
+    @DataBoundSetter
+    public boolean failOnError;
 
     @DataBoundConstructor
     public HipChatStep(@Nonnull String message) {
@@ -73,15 +73,6 @@ public class HipChatStep extends AbstractStepImpl {
             return "Publish HipChat Message";
         }
 
-        public ListBoxModel doFillColorItems(){
-            ListBoxModel listBoxModel = new ListBoxModel();
-            for(Color color : Color.values()) {
-                listBoxModel.add(new ListBoxModel.Option(color.toString(), color.toString(), false));
-            }
-
-           return listBoxModel;
-        }
-
     }
 
     public static class HipChatStepExecution extends AbstractSynchronousNonBlockingStepExecution<Void> {
@@ -102,13 +93,13 @@ public class HipChatStep extends AbstractStepImpl {
             }
 
             //default to global config values if not set in step, but allow step to override all global settings
-            HipChatNotifier.DescriptorImpl hipChatDesc = (HipChatNotifier.DescriptorImpl) Jenkins.getInstance().getDescriptor(HipChatNotifier.class);
+            HipChatNotifier.DescriptorImpl hipChatDesc = Jenkins.getInstance().getDescriptorByType(HipChatNotifier.DescriptorImpl.class);
             String token = step.token != null ? step.token : hipChatDesc.getToken();
             String room = step.room != null ? step.room : hipChatDesc.getRoom();
             String server = step.server != null ? step.server : hipChatDesc.getServer();
             String sendAs = step.sendAs != null ? step.sendAs : hipChatDesc.getSendAs();
             //default to gray if not set in step
-            String color = step.color != null ? step.color : Color.GRAY.toString();
+            Color color = step.color != null ? step.color : Color.GRAY;
             boolean v2enabled = step.v2enabled != null ? step.v2enabled : hipChatDesc.isV2Enabled();
 
             //only way to use this static method from HipChatNotifier and keep HipChatStep in the workflow package is to make it public
@@ -120,7 +111,18 @@ public class HipChatStep extends AbstractStepImpl {
             logger.finer("HipChat publish settings: api v2 - " + v2enabled + " server - " +
                     server + " token - " + token + " room - " + room);
 
-            hipChatService.publish(step.message, color, step.notify);
+            //attempt to publish message, log NotificationException, will allow run to continue
+            try {
+                hipChatService.publish(step.message, color.toString(), step.notify);
+            } catch (NotificationException ne) {
+                //allow entire run to fail based on failOnError field
+                if (step.failOnError) {
+                    throw new AbortException(Messages.NotificationFailed(ne.getMessage()));
+                } else {
+                    listener.error(Messages.NotificationFailed(ne.getMessage()));
+                }
+            }
+
             return null;
         }
 
