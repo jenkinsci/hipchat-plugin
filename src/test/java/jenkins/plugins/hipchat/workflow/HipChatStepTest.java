@@ -64,7 +64,7 @@ public class HipChatStepTest {
     }
 
     @Test
-    public void test_glob_config_ovveride() throws Exception {
+    public void test_glob_config_overide() throws Exception {
         story.addStep(new Statement() {
             @Override
             public void evaluate() throws Throwable {

@@ -114,9 +114,10 @@ public class HipChatStep extends AbstractStepImpl {
             //only way to use this static method from HipChatNotifier and keep HipChatStep in the workflow package is to make it public
             HipChatService hipChatService = HipChatNotifier.getHipChatService(server, token, v2enabled, room, sendAs);
 
+            //placing in console log to simplify testing of retrieving values from global config or from step field
             listener.getLogger().println(Messages.WorkflowStepConfig(step.server == null, step.token == null, step.room == null, step.color == null));
 
-            logger.log(Level.WARNING, "HipChat publish settings: api v2 - " + v2enabled + " server - " +
+            logger.finer("HipChat publish settings: api v2 - " + v2enabled + " server - " +
                     server + " token - " + token + " room - " + room);
 
             hipChatService.publish(step.message, color, step.notify);
