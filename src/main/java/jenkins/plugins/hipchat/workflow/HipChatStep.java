@@ -98,7 +98,7 @@ public class HipChatStep extends AbstractStepImpl {
         protected Void run() throws Exception {
 
             if (StringUtils.isBlank(step.message)) {
-                throw new AbortException("HipChat message not sent. Messasge property must be supplied.");
+                throw new AbortException(Messages.MessageRequiredError());
             }
 
             //default to global config values if not set in step, but allow step to override all global settings
@@ -111,13 +111,8 @@ public class HipChatStep extends AbstractStepImpl {
             String color = step.color != null ? step.color : Color.GRAY.toString();
             boolean v2enabled = step.v2enabled != null ? step.v2enabled : hipChatDesc.isV2Enabled();
 
-            //not very elegant, but getHipChatService is private in HipChatNotifier
-            HipChatService hipChatService;
-            if(v2enabled) {
-                hipChatService = new HipChatV2Service(server, token, room);
-            } else {
-                hipChatService = new HipChatV1Service(server, token, room, sendAs);
-            }
+            //only way to use this static method from HipChatNotifier and keep HipChatStep in the workflow package is to make it public
+            HipChatService hipChatService = HipChatNotifier.getHipChatService(server, token, v2enabled, room, sendAs);
 
             listener.getLogger().println(Messages.WorkflowStepConfig(step.server == null, step.token == null, step.room == null, step.color == null));
 

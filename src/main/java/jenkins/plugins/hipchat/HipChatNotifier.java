@@ -280,7 +280,7 @@ public class HipChatNotifier extends Notifier implements MatrixAggregatable {
                 desc.getSendAs());
     }
 
-    private static HipChatService getHipChatService(String server, String token, boolean v2Enabled, String room,
+    public static HipChatService getHipChatService(String server, String token, boolean v2Enabled, String room,
             String sendAs) {
         if (v2Enabled) {
             return new HipChatV2Service(server, token, room);
