@@ -57,8 +57,8 @@ public class HipChatStepTest {
                 //just define message
                 job.setDefinition(new CpsFlowDefinition("hipchat(message: '');", true));
                 WorkflowRun run = story.j.assertBuildStatus(Result.FAILURE, job.scheduleBuild2(0).get());
-                //everything should come from global configuration
-                story.j.assertLogContains("HipChat message not sent. Messasge property must be supplied.", run);
+                //should result in an error in log
+                story.j.assertLogContains(Messages.MessageRequiredError(), run);
             }
         });
     }
@@ -72,7 +72,7 @@ public class HipChatStepTest {
                 //just define message
                 job.setDefinition(new CpsFlowDefinition("hipchat(message: 'message', server: 'server', token: 'token', room: 'room', color: 'green', v2enabled: true);", true));
                 WorkflowRun run = story.j.assertBuildStatus(Result.FAILURE, job.scheduleBuild2(0).get());
-                //everything should come from global configuration
+                //everything should come from step configuration
                 story.j.assertLogContains(Messages.WorkflowStepConfig(false, false, false, false), run);
             }
         });
