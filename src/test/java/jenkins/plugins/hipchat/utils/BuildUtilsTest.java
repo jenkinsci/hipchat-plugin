@@ -10,10 +10,10 @@ import hudson.model.AbstractProject;
 import hudson.model.CauseAction;
 import hudson.model.ItemGroup;
 import hudson.model.Result;
+import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.model.User;
 import hudson.scm.ChangeLogSet;
-import hudson.scm.ChangeLogSet.Entry;
 import hudson.tasks.test.AbstractTestResultAction;
 import java.util.Arrays;
 import java.util.Collection;
@@ -32,13 +32,15 @@ public class BuildUtilsTest {
     @Mock
     private Jenkins jenkins;
     @Mock
+    private Run<?, ?> run;
+    @Mock
     private AbstractBuild<?, ?> build;
     @Mock
-    private AbstractBuild firstBuild;
+    private Run firstRun;
     @Mock
-    private AbstractBuild secondBuild;
+    private Run secondRun;
     @Mock
-    private AbstractBuild thirdBuild;
+    private Run thirdRun;
     @Mock
     private AbstractProject mockProject;
     @Mock
@@ -49,39 +51,41 @@ public class BuildUtilsTest {
 
     @Test
     public void shouldFindPreviousResultAcrossMultipleIterations() {
-        given(build.getPreviousBuild()).willReturn(thirdBuild);
-        given(thirdBuild.getResult()).willReturn(Result.ABORTED);
-        given(thirdBuild.getPreviousBuild()).willReturn(secondBuild);
-        given(secondBuild.getResult()).willReturn(Result.NOT_BUILT);
-        given(secondBuild.getPreviousBuild()).willReturn(firstBuild);
-        given(firstBuild.getResult()).willReturn(Result.SUCCESS);
+        given(run.getPreviousBuild()).willReturn(thirdRun);
+        given(thirdRun.getResult()).willReturn(Result.ABORTED);
+        given(thirdRun.getPreviousBuild()).willReturn(secondRun);
+        given(secondRun.getResult()).willReturn(Result.NOT_BUILT);
+        given(secondRun.getPreviousBuild()).willReturn(firstRun);
+        given(firstRun.getResult()).willReturn(Result.SUCCESS);
 
-        Result result = buildUtils.findPreviousBuildResult(build);
+        Result result = buildUtils.findPreviousBuildResult(run);
 
         assertThat(result).isEqualTo(Result.SUCCESS);
     }
 
     @Test
     public void shouldReturnNullIfPreviousBuildIsNull() {
-        given(build.getPreviousBuild()).willReturn(null);
+        given(run.getPreviousBuild()).willReturn(null);
 
-        Result result = buildUtils.findPreviousBuildResult(build);
+        Result result = buildUtils.findPreviousBuildResult(run);
 
         assertThat(result).isNull();
     }
 
     @Test
     public void shouldReturnNullIfPreviousBuildIsStillRunning() {
-        given(build.getPreviousBuild()).willReturn(firstBuild);
-        given(firstBuild.getResult()).willReturn(Result.SUCCESS);
-        given(firstBuild.isBuilding()).willReturn(true);
+        given(run.getPreviousBuild()).willReturn(firstRun);
+        given(firstRun.getResult()).willReturn(Result.SUCCESS);
+        given(firstRun.isBuilding()).willReturn(true);
 
-        Result result = buildUtils.findPreviousBuildResult(build);
+        Result result = buildUtils.findPreviousBuildResult(run);
 
         assertThat(result).isNull();
     }
 
     private void setupMocks() throws Exception {
+        given(run.getEnvironment(any(TaskListener.class))).willReturn(new EnvVars());
+        given(run.getParent()).willReturn(mockProject);
         given(build.getEnvironment(any(TaskListener.class))).willReturn(new EnvVars());
         given(build.getParent()).willReturn(mockProject);
         given(mockProject.getParent()).willReturn(mockItemGroup);
@@ -89,7 +93,7 @@ public class BuildUtilsTest {
     }
 
     @Test
-    public void collectedParametersContainBuildVariables() throws Exception {
+    public void collectedParametersContainBuildVariablesForAbstractBuild() throws Exception {
         setupMocks();
         Map<String, String> map = Maps.newHashMap();
         map.put("build", "param");
@@ -105,8 +109,8 @@ public class BuildUtilsTest {
         setupMocks();
         EnvVars envVars = new EnvVars();
         envVars.put("env", "var");
-        given(build.getEnvironment(any(TaskListener.class))).willReturn(envVars);
-        Map<String, String> collected = buildUtils.collectParametersFor(jenkins, build);
+        given(run.getEnvironment(any(TaskListener.class))).willReturn(envVars);
+        Map<String, String> collected = buildUtils.collectParametersFor(jenkins, run);
 
         assertThat(collected).containsEntry("env", "var");
     }
@@ -114,9 +118,9 @@ public class BuildUtilsTest {
     @Test
     public void collectedParametersContainDurationFromBuild() throws Exception {
         setupMocks();
-        given(build.getDurationString()).willReturn("3,9 sec");
+        given(run.getDurationString()).willReturn("3,9 sec");
 
-        Map<String, String> collected = buildUtils.collectParametersFor(jenkins, build);
+        Map<String, String> collected = buildUtils.collectParametersFor(jenkins, run);
 
         assertThat(collected).containsEntry("DURATION", "3,9 sec");
     }
@@ -126,9 +130,9 @@ public class BuildUtilsTest {
         setupMocks();
 
         given(jenkins.getRootUrl()).willReturn("http://localhost:8080/jenkins");
-        given(build.getUrl()).willReturn("/job/test%20project/1/");
+        given(run.getUrl()).willReturn("/job/test%20project/1/");
 
-        Map<String, String> collected = buildUtils.collectParametersFor(jenkins, build);
+        Map<String, String> collected = buildUtils.collectParametersFor(jenkins, run);
 
         assertThat(collected).containsEntry("URL", "http://localhost:8080/jenkins/job/test%20project/1/");
     }
@@ -138,16 +142,41 @@ public class BuildUtilsTest {
         setupMocks();
         CauseAction mockAction = mock(CauseAction.class);
         given(mockAction.getShortDescription()).willReturn("buildCause");
-        given(build.getAction(eq(CauseAction.class))).willReturn(mockAction);
+        given(run.getAction(eq(CauseAction.class))).willReturn(mockAction);
 
-        Map<String, String> collected = buildUtils.collectParametersFor(jenkins, build);
+        Map<String, String> collected = buildUtils.collectParametersFor(jenkins, run);
 
         assertThat(collected).containsEntry("CAUSE", "buildCause");
     }
 
     @Test
-    public void collectedParametersContainChanges() throws Exception {
+    public void changesOrCauseContainsCauseForRun() throws Exception {
         setupMocks();
+        CauseAction mockAction = mock(CauseAction.class);
+        given(mockAction.getShortDescription()).willReturn("buildCause");
+        given(run.getAction(eq(CauseAction.class))).willReturn(mockAction);
+
+        Map<String, String> collected = buildUtils.collectParametersFor(jenkins, run);
+
+        assertThat(collected).containsEntry("CHANGES_OR_CAUSE", "buildCause");
+    }
+
+    @Test
+    public void changesOrCauseContainsChangesForAbstractBuild() throws Exception {
+        setupMocks();
+        CauseAction mockAction = mock(CauseAction.class);
+        given(mockAction.getShortDescription()).willReturn("buildCause");
+        given(run.getAction(eq(CauseAction.class))).willReturn(mockAction);
+
+        setupChangesMock();
+
+        Map<String, String> collected = buildUtils.collectParametersFor(jenkins, build);
+
+        String changesOrCause = collected.get("CHANGES_OR_CAUSE");
+        assertThat(changesOrCause).isNotNull().isNotEmpty().contains("alice", "bob", "42");
+    }
+
+    private void setupChangesMock() {
         given(build.hasChangeSetComputed()).willReturn(true);
         User mockUser = mock(User.class);
         given(mockUser.getDisplayName()).willReturn("alice");
@@ -165,9 +194,14 @@ public class BuildUtilsTest {
         mockList = mock(List.class);
         given(mockList.size()).willReturn(22);
         given(secondMockEntry.getAffectedFiles()).willReturn(mockList);
-        
-        given(build.getChangeSet()).willReturn(new FakeChangeLogSet(mockEntry, secondMockEntry));
 
+        given(build.getChangeSet()).willReturn(new FakeChangeLogSet(mockEntry, secondMockEntry));
+    }
+
+    @Test
+    public void collectedParametersContainChangesForAbstractBuild() throws Exception {
+        setupMocks();
+        setupChangesMock();
         Map<String, String> collected = buildUtils.collectParametersFor(jenkins, build);
 
         String changes = collected.get("CHANGES");
@@ -179,7 +213,7 @@ public class BuildUtilsTest {
         setupMocks();
         given(mockProject.getDisplayName()).willReturn("test project");
 
-        Map<String, String> collected = buildUtils.collectParametersFor(jenkins, build);
+        Map<String, String> collected = buildUtils.collectParametersFor(jenkins, run);
 
         assertThat(collected).containsEntry("JOB_DISPLAY_NAME", "test project");
     }
@@ -189,9 +223,9 @@ public class BuildUtilsTest {
         setupMocks();
         given(mockTestResults.getFailCount()).willReturn(13);
         given(mockTestResults.getTotalCount()).willReturn(21);
-        given(build.getAction(eq(AbstractTestResultAction.class))).willReturn(mockTestResults);
+        given(run.getAction(eq(AbstractTestResultAction.class))).willReturn(mockTestResults);
 
-        Map<String, String> collected = buildUtils.collectParametersFor(jenkins, build);
+        Map<String, String> collected = buildUtils.collectParametersFor(jenkins, run);
 
         assertThat(collected).containsEntry("FAILED_TEST_COUNT", "13");
         assertThat(collected).containsEntry("TEST_COUNT", "21");
