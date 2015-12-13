@@ -57,6 +57,21 @@ public class HipChatSendStepTest {
                 WorkflowJob job = story.j.jenkins.createProject(WorkflowJob.class, "workflow");
                 //just define message
                 job.setDefinition(new CpsFlowDefinition("hipchatSend(message: '');", true));
+                WorkflowRun run = story.j.assertBuildStatusSuccess(job.scheduleBuild2(0).get());
+                //should result in an error in log
+                story.j.assertLogContains(Messages.MessageRequiredError(), run);
+            }
+        });
+    }
+
+    @Test
+    public void test_empty_message_fail_on_error() throws Exception {
+        story.addStep(new Statement() {
+            @Override
+            public void evaluate() throws Throwable {
+                WorkflowJob job = story.j.jenkins.createProject(WorkflowJob.class, "workflow");
+                //just define message
+                job.setDefinition(new CpsFlowDefinition("hipchatSend(message: '', failOnError: true);", true));
                 WorkflowRun run = story.j.assertBuildStatus(Result.FAILURE, job.scheduleBuild2(0).get());
                 //should result in an error in log
                 story.j.assertLogContains(Messages.MessageRequiredError(), run);
