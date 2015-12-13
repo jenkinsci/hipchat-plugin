@@ -21,9 +21,12 @@ import javax.annotation.Nonnull;
 import javax.inject.Inject;
 import java.util.logging.Logger;
 
-public class HipChatStep extends AbstractStepImpl {
+/**
+ * Workflow step to send a HipChat room notification.
+ */
+public class HipChatSendStep extends AbstractStepImpl {
 
-    private static final Logger logger = Logger.getLogger(HipChatStep.class.getName());
+    private static final Logger logger = Logger.getLogger(HipChatSendStep.class.getName());
 
     public final String message;
 
@@ -52,7 +55,7 @@ public class HipChatStep extends AbstractStepImpl {
     public boolean failOnError;
 
     @DataBoundConstructor
-    public HipChatStep(@Nonnull String message) {
+    public HipChatSendStep(@Nonnull String message) {
         this.message = message;
     }
 
@@ -60,27 +63,27 @@ public class HipChatStep extends AbstractStepImpl {
     public static class DescriptorImpl extends AbstractStepDescriptorImpl {
 
         public DescriptorImpl() {
-            super(HipChatStepExecution.class);
+            super(HipChatSendStepExecution.class);
         }
 
         @Override
         public String getFunctionName() {
-            return "hipchat";
+            return "hipchatSend";
         }
 
         @Override
         public String getDisplayName() {
-            return "Publish HipChat Message";
+            return Messages.HipChatSendStepDisplayName();
         }
 
     }
 
-    public static class HipChatStepExecution extends AbstractSynchronousNonBlockingStepExecution<Void> {
+    public static class HipChatSendStepExecution extends AbstractSynchronousNonBlockingStepExecution<Void> {
 
         private static final long serialVersionUID = 1L;
 
         @Inject
-        private transient HipChatStep step;
+        private transient HipChatSendStep step;
         @StepContextParameter
         transient TaskListener listener;
 
@@ -89,7 +92,12 @@ public class HipChatStep extends AbstractStepImpl {
         protected Void run() throws Exception {
 
             if (StringUtils.isBlank(step.message)) {
-                throw new AbortException(Messages.MessageRequiredError());
+                //allow entire run to fail based on failOnError field
+                if (step.failOnError) {
+                    throw new AbortException(Messages.MessageRequiredError());
+                } else {
+                    listener.error(Messages.MessageRequiredError());
+                }
             }
 
             //default to global config values if not set in step, but allow step to override all global settings
@@ -102,7 +110,7 @@ public class HipChatStep extends AbstractStepImpl {
             Color color = step.color != null ? step.color : Color.GRAY;
             boolean v2enabled = step.v2enabled != null ? step.v2enabled : hipChatDesc.isV2Enabled();
 
-            //only way to use this static method from HipChatNotifier and keep HipChatStep in the workflow package is to make it public
+            //only way to use this static method from HipChatNotifier and keep HipChatSendStep in the workflow package is to make it public
             HipChatService hipChatService = HipChatNotifier.getHipChatService(server, token, v2enabled, room, sendAs);
 
             //placing in console log to simplify testing of retrieving values from global config or from step field

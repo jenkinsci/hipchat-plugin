@@ -12,7 +12,7 @@ import org.junit.Test;
 import org.junit.runners.model.Statement;
 import org.jvnet.hudson.test.RestartableJenkinsRule;
 
-public class HipChatStepTest {
+public class HipChatSendStepTest {
     @Rule
     public RestartableJenkinsRule story = new RestartableJenkinsRule();
 
@@ -22,26 +22,26 @@ public class HipChatStepTest {
         story.addStep(new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                HipChatStep step1 = new HipChatStep("message");
+                HipChatSendStep step1 = new HipChatSendStep("message");
                 step1.color = Color.GREEN;
                 step1.room = "room";
                 step1.v2enabled = true;
                 step1.notify = false;
 
-                HipChatStep step2 = new StepConfigTester(story.j).configRoundTrip(step1);
+                HipChatSendStep step2 = new StepConfigTester(story.j).configRoundTrip(step1);
                 story.j.assertEqualDataBoundBeans(step1, step2);
             }
         });
     }
 
     @Test
-    public void test_publish_messasge() throws Exception {
+    public void test_publish_message() throws Exception {
         story.addStep(new Statement() {
             @Override
             public void evaluate() throws Throwable {
                 WorkflowJob job = story.j.jenkins.createProject(WorkflowJob.class, "workflow");
                 //just define message
-                job.setDefinition(new CpsFlowDefinition("hipchat 'message';", true));
+                job.setDefinition(new CpsFlowDefinition("hipchatSend 'message';", true));
                 WorkflowRun run = story.j.assertBuildStatusSuccess(job.scheduleBuild2(0));
                 //everything should come from global configuration
                 story.j.assertLogContains(Messages.WorkflowStepConfig(true, true, true, true), run);
@@ -56,7 +56,7 @@ public class HipChatStepTest {
             public void evaluate() throws Throwable {
                 WorkflowJob job = story.j.jenkins.createProject(WorkflowJob.class, "workflow");
                 //just define message
-                job.setDefinition(new CpsFlowDefinition("hipchat(message: '');", true));
+                job.setDefinition(new CpsFlowDefinition("hipchatSend(message: '');", true));
                 WorkflowRun run = story.j.assertBuildStatus(Result.FAILURE, job.scheduleBuild2(0).get());
                 //should result in an error in log
                 story.j.assertLogContains(Messages.MessageRequiredError(), run);
@@ -65,13 +65,13 @@ public class HipChatStepTest {
     }
 
     @Test
-    public void test_global_config_overide() throws Exception {
+    public void test_global_config_override() throws Exception {
         story.addStep(new Statement() {
             @Override
             public void evaluate() throws Throwable {
                 WorkflowJob job = story.j.jenkins.createProject(WorkflowJob.class, "workflow");
                 //just define message
-                job.setDefinition(new CpsFlowDefinition("hipchat(message: 'message', server: 'server', token: 'token', room: 'room', color: 'GREEN', v2enabled: true);", true));
+                job.setDefinition(new CpsFlowDefinition("hipchatSend(message: 'message', server: 'server', token: 'token', room: 'room', color: 'GREEN', v2enabled: true);", true));
                 WorkflowRun run = story.j.assertBuildStatusSuccess(job.scheduleBuild2(0).get());
                 //everything should come from step configuration
                 story.j.assertLogContains(Messages.WorkflowStepConfig(false, false, false, false), run);
@@ -86,7 +86,7 @@ public class HipChatStepTest {
             public void evaluate() throws Throwable {
                 WorkflowJob job = story.j.jenkins.createProject(WorkflowJob.class, "workflow");
                 //just define message
-                job.setDefinition(new CpsFlowDefinition("hipchat(message: 'message', server: 'server', token: 'token', room: 'room', color: 'GREEN', v2enabled: true, failOnError: true);", true));
+                job.setDefinition(new CpsFlowDefinition("hipchatSend(message: 'message', server: 'server', token: 'token', room: 'room', color: 'GREEN', v2enabled: true, failOnError: true);", true));
                 WorkflowRun run = story.j.assertBuildStatus(Result.FAILURE, job.scheduleBuild2(0).get());
                 //everything should come from step configuration
                 story.j.assertLogContains(Messages.NotificationFailed(""), run);
