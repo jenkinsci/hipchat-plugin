@@ -9,6 +9,7 @@ import hudson.EnvVars;
 import hudson.model.AbstractBuild;
 import hudson.model.CauseAction;
 import hudson.model.Result;
+import hudson.model.Run;
 import hudson.model.User;
 import hudson.scm.ChangeLogSet;
 import hudson.tasks.test.AbstractTestResultAction;
@@ -27,37 +28,43 @@ public class BuildUtils {
 
     private static final Logger LOGGER = Logger.getLogger(BuildUtils.class.getName());
 
-    public Result findPreviousBuildResult(AbstractBuild<?, ?> build) {
+    public Result findPreviousBuildResult(Run<?, ?> run) {
         do {
-            build = build.getPreviousBuild();
-            if (build == null || build.isBuilding()) {
+            run = run.getPreviousBuild();
+            if (run == null || run.isBuilding()) {
                 return null;
             }
-        } while (build.getResult() == Result.ABORTED || build.getResult() == Result.NOT_BUILT);
-        return build.getResult();
+        } while (run.getResult() == Result.ABORTED || run.getResult() == Result.NOT_BUILT);
+        return run.getResult();
     }
 
-    public Map<String, String> collectParametersFor(Jenkins jenkins, AbstractBuild<?, ?> build) {
+    public Map<String, String> collectParametersFor(Jenkins jenkins, Run<?, ?> run) {
         Map<String, String> merged = newHashMap();
-        merged.putAll(build.getBuildVariables());
-        merged.putAll(getEnvironmentVariables(build));
-        merged.putAll(getTestData(build));
-
-        String cause = getCause(build);
-        String changes = getChanges(build);
-
-        merged.put("DURATION", build.getDurationString());
-        merged.put("URL", jenkins.getRootUrl() + build.getUrl());
+        AbstractBuild<?, ?> build = null;
+        if (run instanceof AbstractBuild) {
+            build = (AbstractBuild<?, ?>) run;
+            merged.putAll(build.getBuildVariables());
+        }
+        merged.putAll(getEnvironmentVariables(run));
+        merged.putAll(getTestData(run));
+        String cause = getCause(run);
+        merged.put("DURATION", run.getDurationString());
+        merged.put("URL", jenkins.getRootUrl() + run.getUrl());
         merged.put("CAUSE", cause);
+        merged.put("JOB_DISPLAY_NAME", run.getParent().getDisplayName());
+        String changes = null;
+        if (build != null) {
+            changes = getChanges(build);
+            merged.put("CHANGES", changes);
+        }
         merged.put("CHANGES_OR_CAUSE", changes != null ? changes : cause);
-        merged.put("CHANGES", changes);
-        merged.put("JOB_DISPLAY_NAME", build.getProject().getDisplayName());
+
         return merged;
     }
 
-    private static EnvVars getEnvironmentVariables(AbstractBuild<?, ?> build) {
+    private static EnvVars getEnvironmentVariables(Run<?, ?> run) {
         try {
-            return build.getEnvironment(new LogTaskListener(LOGGER, INFO));
+            return run.getEnvironment(new LogTaskListener(LOGGER, INFO));
         } catch (IOException e) {
             throw propagate(e);
         } catch (InterruptedException e) {
@@ -65,8 +72,8 @@ public class BuildUtils {
         }
     }
 
-    private static String getCause(AbstractBuild<?, ?> build) {
-        CauseAction cause = build.getAction(CauseAction.class);
+    private static String getCause(Run<?, ?> run) {
+        CauseAction cause = run.getAction(CauseAction.class);
         if (cause != null) {
             return cause.getShortDescription();
         } else {
@@ -106,9 +113,9 @@ public class BuildUtils {
         return Messages.StartWithChanges(StringUtils.join(authors, ", "), changedFiles);
     }
 
-    private Map<String, String> getTestData(AbstractBuild<?, ?> build) {
+    private Map<String, String> getTestData(Run<?, ?> run) {
         Map<String, String> results = newHashMapWithExpectedSize(2);
-        AbstractTestResultAction testResults = build.getAction(AbstractTestResultAction.class);
+        AbstractTestResultAction testResults = run.getAction(AbstractTestResultAction.class);
         if (testResults != null) {
             results.put("FAILED_TEST_COUNT", String.valueOf(testResults.getFailCount()));
             results.put("TEST_COUNT", String.valueOf(testResults.getTotalCount()));
