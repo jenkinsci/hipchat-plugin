@@ -9,14 +9,16 @@ import org.kohsuke.stapler.DataBoundConstructor;
 public class NotificationConfig implements Describable<NotificationConfig> {
 
     private final boolean notifyEnabled;
+    private final boolean textFormat;
     private final NotificationType notificationType;
     private final Color color;
     private final String messageTemplate;
 
     @DataBoundConstructor
-    public NotificationConfig(boolean notifyEnabled, NotificationType notificationType, Color color,
+    public NotificationConfig(boolean notifyEnabled, boolean textFormat, NotificationType notificationType, Color color,
             String messageTemplate) {
         this.notifyEnabled = notifyEnabled;
+        this.textFormat = textFormat;
         this.notificationType = notificationType;
         this.color = color;
         this.messageTemplate = messageTemplate;
@@ -28,6 +30,10 @@ public class NotificationConfig implements Describable<NotificationConfig> {
 
     public NotificationType getNotificationType() {
         return notificationType;
+    }
+
+    public boolean isTextFormat() {
+        return textFormat;
     }
 
     public Color getColor() {

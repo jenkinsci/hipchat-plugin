@@ -49,6 +49,9 @@ public class HipChatSendStep extends AbstractStepImpl {
     public boolean notify;
 
     @DataBoundSetter
+    public boolean textFormat;
+
+    @DataBoundSetter
     public Boolean v2enabled;
 
     @DataBoundSetter
@@ -127,7 +130,7 @@ public class HipChatSendStep extends AbstractStepImpl {
             try {
                 String message = Util.replaceMacro(step.message,
                         buildUtils.collectParametersFor(Jenkins.getInstance(), run));
-                hipChatService.publish(message, color.toString(), step.notify);
+                hipChatService.publish(message, color.toString(), step.notify, step.textFormat);
                 listener.getLogger().println(Messages.NotificationSuccessful(room));
             } catch (NotificationException ne) {
                 listener.getLogger().println(Messages.NotificationFailed(ne.getMessage()));

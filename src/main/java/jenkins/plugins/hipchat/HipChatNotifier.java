@@ -147,25 +147,25 @@ public class HipChatNotifier extends Notifier implements MatrixAggregatable {
         if (notifications == null) {
             notifications = new ArrayList<NotificationConfig>(7);
             if (startNotification) {
-                notifications.add(new NotificationConfig(false, STARTED, Color.GREEN, null));
+                notifications.add(new NotificationConfig(false, false, STARTED, Color.GREEN, null));
             }
             if (notifySuccess) {
-                notifications.add(new NotificationConfig(false, SUCCESS, Color.GREEN, null));
+                notifications.add(new NotificationConfig(false, false, SUCCESS, Color.GREEN, null));
             }
             if (notifyAborted) {
-                notifications.add(new NotificationConfig(true, ABORTED, Color.GRAY, null));
+                notifications.add(new NotificationConfig(true, false, ABORTED, Color.GRAY, null));
             }
             if (notifyNotBuilt) {
-                notifications.add(new NotificationConfig(true, NOT_BUILT, Color.GRAY, null));
+                notifications.add(new NotificationConfig(true, false, NOT_BUILT, Color.GRAY, null));
             }
             if (notifyUnstable) {
-                notifications.add(new NotificationConfig(true, UNSTABLE, Color.YELLOW, null));
+                notifications.add(new NotificationConfig(true, false, UNSTABLE, Color.YELLOW, null));
             }
             if (notifyFailure) {
-                notifications.add(new NotificationConfig(true, FAILURE, Color.RED, null));
+                notifications.add(new NotificationConfig(true, false, FAILURE, Color.RED, null));
             }
             if (notifyBackToNormal) {
-                notifications.add(new NotificationConfig(false, BACK_TO_NORMAL, Color.GREEN, null));
+                notifications.add(new NotificationConfig(false, false, BACK_TO_NORMAL, Color.GREEN, null));
             }
         }
         return this;

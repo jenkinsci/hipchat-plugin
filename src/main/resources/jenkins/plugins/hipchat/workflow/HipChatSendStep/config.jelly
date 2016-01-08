@@ -10,6 +10,9 @@
     <f:entry field="notify">
         <f:checkbox title="${%Notify Room}" default="false"/>
     </f:entry>
+    <f:entry field="textFormat">
+        <f:checkbox title="${%Text Format}" default="false"/>
+    </f:entry>
     <f:advanced>
         <f:entry field="server" title="${%HipChat Server}">
             <f:textbox />

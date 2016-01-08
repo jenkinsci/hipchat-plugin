@@ -31,7 +31,7 @@ public class HipChatV2Service extends HipChatService {
     }
 
     @Override
-    public void publish(String message, String color, boolean notify) throws NotificationException {
+    public void publish(String message, String color, boolean notify, boolean textFormat) throws NotificationException {
         for (String roomId : roomIds) {
             logger.log(Level.INFO, "Posting to {0}: {1} {2}", new Object[]{roomId, message, color});
             CloseableHttpClient httpClient = getHttpClient();
@@ -44,6 +44,7 @@ public class HipChatV2Service extends HipChatService {
 
                 JSONObject notification = new JSONObject();
                 notification.put("message", message);
+                notification.put("message_format", textFormat ? "text" : "html");
                 notification.put("color", color);
                 notification.put("notify", notify);
                 post.setEntity(new StringEntity(notification.toString(), ContentType.APPLICATION_JSON));

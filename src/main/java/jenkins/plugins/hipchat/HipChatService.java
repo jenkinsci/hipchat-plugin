@@ -55,10 +55,16 @@ public abstract class HipChatService {
     }
 
     public final void publish(NotificationConfig notificationConfig, String message) throws NotificationException {
-        publish(message, notificationConfig.getColor().toString(), notificationConfig.isNotifyEnabled());
+        publish(message, notificationConfig.getColor().toString(), notificationConfig.isNotifyEnabled(),
+                notificationConfig.isTextFormat());
     }
 
-    public abstract void publish(String message, String color, boolean notify) throws NotificationException;
+    public void publish(String message, String color, boolean notify) throws NotificationException {
+        publish(message, color, notify, false);
+    }
+
+    public abstract void publish(String message, String color, boolean notify, boolean textFormat)
+            throws NotificationException;
 
     protected final String readResponse(HttpEntity entity) throws IOException {
         return entity != null ? EntityUtils.toString(entity) : null;

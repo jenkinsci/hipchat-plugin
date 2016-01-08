@@ -3,6 +3,9 @@
         <td style="width: 5%">
             <f:checkbox field="notifyEnabled" />
         </td>
+        <td style="width: 5%">
+            <f:checkbox field="textFormat" />
+        </td>
         <td style="width: 15%">
             <f:enum field="notificationType">
                 ${it.getStatus()}
@@ -16,7 +19,7 @@
         <td style="width: 60%">
             <f:textbox field="messageTemplate" />
         </td>
-        <td style="width: 10%">
+        <td style="width: 5%">
             <f:repeatableDeleteButton />
         </td>
     </tr>

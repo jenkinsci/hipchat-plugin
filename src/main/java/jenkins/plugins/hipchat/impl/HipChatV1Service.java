@@ -35,7 +35,7 @@ public class HipChatV1Service extends HipChatService {
     }
 
     @Override
-    public void publish(String message, String color, boolean notify) throws NotificationException {
+    public void publish(String message, String color, boolean notify, boolean textFormat) throws NotificationException {
         for (String roomId : roomIds) {
             logger.log(Level.FINE, "Posting: {0} to {1}: {2} {3}", new Object[]{sendAs, roomId, message, color});
             CloseableHttpClient httpClient = getHttpClient();
@@ -48,6 +48,7 @@ public class HipChatV1Service extends HipChatService {
                 nvps.add(new BasicNameValuePair("from", sendAs));
                 nvps.add(new BasicNameValuePair("room_id", roomId));
                 nvps.add(new BasicNameValuePair("message", message));
+                nvps.add(new BasicNameValuePair("message_format", textFormat ? "text" : "html"));
                 nvps.add(new BasicNameValuePair("color", color));
                 nvps.add(new BasicNameValuePair("notify", notify ? "1" : "0"));
                 post.setEntity(new UrlEncodedFormEntity(nvps, "UTF-8"));
