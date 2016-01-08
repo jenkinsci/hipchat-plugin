@@ -2,13 +2,20 @@ package jenkins.plugins.hipchat.workflow;
 
 import hudson.AbortException;
 import hudson.Extension;
+import hudson.Util;
+import hudson.model.Run;
 import hudson.model.TaskListener;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.annotation.Nonnull;
+import javax.inject.Inject;
 import jenkins.model.Jenkins;
 import jenkins.plugins.hipchat.HipChatNotifier;
 import jenkins.plugins.hipchat.HipChatService;
 import jenkins.plugins.hipchat.Messages;
 import jenkins.plugins.hipchat.exceptions.NotificationException;
 import jenkins.plugins.hipchat.model.Color;
+import jenkins.plugins.hipchat.utils.BuildUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
@@ -16,10 +23,6 @@ import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousNonBlockingStepEx
 import org.jenkinsci.plugins.workflow.steps.StepContextParameter;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
-
-import javax.annotation.Nonnull;
-import javax.inject.Inject;
-import java.util.logging.Logger;
 
 /**
  * Workflow step to send a HipChat room notification.
@@ -83,10 +86,13 @@ public class HipChatSendStep extends AbstractStepImpl {
         private static final long serialVersionUID = 1L;
 
         @Inject
+        private transient BuildUtils buildUtils;
+        @Inject
         private transient HipChatSendStep step;
         @StepContextParameter
-        transient TaskListener listener;
-
+        private transient TaskListener listener;
+        @StepContextParameter
+        private transient Run<?, ?> run;
 
         @Override
         protected Void run() throws Exception {
@@ -98,10 +104,12 @@ public class HipChatSendStep extends AbstractStepImpl {
                 } else {
                     listener.error(Messages.MessageRequiredError());
                 }
+                return null;
             }
 
             //default to global config values if not set in step, but allow step to override all global settings
-            HipChatNotifier.DescriptorImpl hipChatDesc = Jenkins.getInstance().getDescriptorByType(HipChatNotifier.DescriptorImpl.class);
+            HipChatNotifier.DescriptorImpl hipChatDesc =
+                    Jenkins.getInstance().getDescriptorByType(HipChatNotifier.DescriptorImpl.class);
             String token = step.token != null ? step.token : hipChatDesc.getToken();
             String room = step.room != null ? step.room : hipChatDesc.getRoom();
             String server = step.server != null ? step.server : hipChatDesc.getServer();
@@ -110,19 +118,19 @@ public class HipChatSendStep extends AbstractStepImpl {
             Color color = step.color != null ? step.color : Color.GRAY;
             boolean v2enabled = step.v2enabled != null ? step.v2enabled : hipChatDesc.isV2Enabled();
 
-            //only way to use this static method from HipChatNotifier and keep HipChatSendStep in the workflow package is to make it public
             HipChatService hipChatService = HipChatNotifier.getHipChatService(server, token, v2enabled, room, sendAs);
 
-            //placing in console log to simplify testing of retrieving values from global config or from step field
-            listener.getLogger().println(Messages.WorkflowStepConfig(step.server == null, step.token == null, step.room == null, step.color == null));
-
-            logger.finer("HipChat publish settings: api v2 - " + v2enabled + " server - " +
-                    server + " token - " + token + " room - " + room);
+            logger.log(Level.FINER, "HipChat publish settings: api v2 - {0} server - {1} token - {2} room - {3}",
+                    new Object[]{v2enabled, server, token, room});
 
             //attempt to publish message, log NotificationException, will allow run to continue
             try {
-                hipChatService.publish(step.message, color.toString(), step.notify);
+                String message = Util.replaceMacro(step.message,
+                        buildUtils.collectParametersFor(Jenkins.getInstance(), run));
+                hipChatService.publish(message, color.toString(), step.notify);
+                listener.getLogger().println(Messages.NotificationSuccessful(room));
             } catch (NotificationException ne) {
+                listener.getLogger().println(Messages.NotificationFailed(ne.getMessage()));
                 //allow entire run to fail based on failOnError field
                 if (step.failOnError) {
                     throw new AbortException(Messages.NotificationFailed(ne.getMessage()));
@@ -133,7 +141,5 @@ public class HipChatSendStep extends AbstractStepImpl {
 
             return null;
         }
-
     }
-
 }

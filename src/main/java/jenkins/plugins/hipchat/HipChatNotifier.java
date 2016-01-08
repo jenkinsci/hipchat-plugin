@@ -280,6 +280,16 @@ public class HipChatNotifier extends Notifier implements MatrixAggregatable {
                 desc.getSendAs());
     }
 
+    /**
+     * Obtains a {@link HipChatService} implementation corresponding to the provided settings.
+     *
+     * @param server The URL for the HipChat server.
+     * @param token The auth token to use when sending the notification.
+     * @param v2Enabled Whether v1 or v2 API should be used.
+     * @param room The room to notify.
+     * @param sendAs The username to use as the sender when using the v1 API.
+     * @return An API version specific {@link HipChatService} instance.
+     */
     public static HipChatService getHipChatService(String server, String token, boolean v2Enabled, String room,
             String sendAs) {
         if (v2Enabled) {
