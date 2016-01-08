@@ -39,3 +39,9 @@ The following DSL script can be used to send out notifications as part of the fl
     hipChatV2.publish("This is a V2 notification", "green", /*notify?*/true);
 
 Note, that the API may change between versions potentially causing build failures for such projects.
+
+#### Workflow-plugin support
+
+When using workflow projects, HipChat messages can be sent using the following script snippet:
+
+    hipchatSend color: 'YELLOW', failOnError: true, message: 'foo', notify: true, room: 'hello', sendAs: 'world', server: 'bar', token: 'baz', v2enabled: true
