@@ -15,7 +15,7 @@
       </f:entry>
     </j:if>
 
-    <f:entry title="${%Notifications}" help="/plugin/hipchat/help-projectConfig-hipChatNotifications.jelly" field="notifications">
+    <f:entry title="${%Notifications}" help="/plugin/hipchat/help-projectConfig-hipChatNotifications.html" field="notifications">
         <table width="100%">
             <tr style="text-align:left">
                 <th width="5%">${%Notify Room}</th>
