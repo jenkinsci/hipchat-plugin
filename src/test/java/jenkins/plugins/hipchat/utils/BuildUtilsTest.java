@@ -21,14 +21,18 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import jenkins.model.Jenkins;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.jvnet.hudson.test.JenkinsRule;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class BuildUtilsTest {
 
+    @Rule
+    public JenkinsRule rule = new JenkinsRule();
     @Mock
     private Jenkins jenkins;
     @Mock
@@ -129,12 +133,12 @@ public class BuildUtilsTest {
     public void collectedParametersContainCorrectUrl() throws Exception {
         setupMocks();
 
-        given(jenkins.getRootUrl()).willReturn("http://localhost:8080/jenkins");
-        given(run.getUrl()).willReturn("/job/test%20project/1/");
+        given(jenkins.getRootUrl()).willReturn(getRootUrl());
+        given(run.getUrl()).willReturn("job/test%20project/1/");
 
         Map<String, String> collected = buildUtils.collectParametersFor(jenkins, run);
 
-        assertThat(collected).containsEntry("URL", "http://localhost:8080/jenkins/job/test%20project/1/");
+        assertThat(collected).containsEntry("URL", getRootUrl() + "job/test%20project/1/");
     }
 
     @Test
@@ -249,5 +253,9 @@ public class BuildUtilsTest {
         public Iterator<Entry> iterator() {
             return Arrays.asList(entries).iterator();
         }
+    }
+
+    private String getRootUrl() throws Exception {
+        return rule.getURL().toString();
     }
 }

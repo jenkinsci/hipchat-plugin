@@ -22,6 +22,7 @@ import javax.inject.Singleton;
 import jenkins.model.Jenkins;
 import jenkins.plugins.hipchat.Messages;
 import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
 
 @Singleton
 public class BuildUtils {
@@ -49,7 +50,7 @@ public class BuildUtils {
         merged.putAll(getTestData(run));
         String cause = getCause(run);
         merged.put("DURATION", run.getDurationString());
-        merged.put("URL", jenkins.getRootUrl() + run.getUrl());
+        merged.put("URL", DisplayURLProvider.get().getRunURL(run));
         merged.put("CAUSE", cause);
         merged.put("JOB_DISPLAY_NAME", run.getParent().getDisplayName());
         String changes = null;
