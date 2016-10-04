@@ -6,6 +6,7 @@ import static java.util.logging.Level.*;
 
 import com.google.common.collect.Sets;
 import hudson.EnvVars;
+import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.CauseAction;
 import hudson.model.Result;
@@ -53,17 +54,12 @@ public class BuildUtils {
         merged.put("URL", DisplayURLProvider.get().getRunURL(run));
         merged.put("CAUSE", cause);
         merged.put("JOB_DISPLAY_NAME", run.getParent().getDisplayName());
-        String changes = null;
-        if (build != null) {
-            changes = getChanges(build);
-            merged.put("CHANGES", changes);
-        }
-        merged.put("CHANGES_OR_CAUSE", changes != null ? changes : cause);
+        merged.putAll(getChangeSetData(build, cause));
 
         return merged;
     }
 
-    private static EnvVars getEnvironmentVariables(Run<?, ?> run) {
+    private EnvVars getEnvironmentVariables(Run<?, ?> run) {
         try {
             return run.getEnvironment(new LogTaskListener(LOGGER, INFO));
         } catch (IOException e) {
@@ -73,7 +69,7 @@ public class BuildUtils {
         }
     }
 
-    private static String getCause(Run<?, ?> run) {
+    private String getCause(Run<?, ?> run) {
         CauseAction cause = run.getAction(CauseAction.class);
         if (cause != null) {
             return cause.getShortDescription();
@@ -82,36 +78,50 @@ public class BuildUtils {
         }
     }
 
-    private static String getChanges(AbstractBuild<?, ?> build) {
-        if (!build.hasChangeSetComputed()) {
-            LOGGER.log(FINE, "No changeset computed for job {0}", build.getProject().getFullDisplayName());
-            return null;
-        }
-        Set<String> authors = Sets.newHashSet();
-        int changedFiles = 0;
-        for (Object o : build.getChangeSet().getItems()) {
-            ChangeLogSet.Entry entry = (ChangeLogSet.Entry) o;
-            LOGGER.log(FINEST, "Entry {0}", entry);
-            User author = entry.getAuthor();
-            if (author == null) {
-                //author may be null in certain cases with git
-                author = User.getUnknown();
+    private Map<String, String> getChangeSetData(AbstractBuild<?, ?> build, String cause) {
+        String changes = null;
+        String commitMessage = "";
+        String commitMessageText = "";
+        Map<String, String> ret = newHashMapWithExpectedSize(2);
+        if (build != null) {
+            if (!build.hasChangeSetComputed()) {
+                LOGGER.log(FINE, "No changeset computed for job {0}", build.getProject().getFullDisplayName());
+            } else {
+                Set<String> authors = Sets.newHashSet();
+                int changedFiles = 0;
+                for (Object o : build.getChangeSet().getItems()) {
+                    ChangeLogSet.Entry entry = (ChangeLogSet.Entry) o;
+                    LOGGER.log(FINEST, "Entry {0}", entry);
+                    commitMessage = stripMessage(entry.getMsgEscaped());
+                    commitMessageText = stripMessage(entry.getMsg());
+
+                    User author = entry.getAuthor();
+                    if (author == null) {
+                        //author may be null in certain cases with git
+                        author = User.getUnknown();
+                    }
+                    authors.add(author.getDisplayName());
+                    try {
+                        changedFiles += entry.getAffectedFiles().size();
+                    } catch (UnsupportedOperationException e) {
+                        LOGGER.log(INFO, "Unable to collect the affected files for job {0}",
+                                build.getProject().getFullDisplayName());
+                        return null;
+                    }
+                }
+                if (changedFiles == 0) {
+                    LOGGER.log(FINE, "No changes detected");
+                } else {
+                    changes = Messages.StartWithChanges(StringUtils.join(authors, ", "), changedFiles);
+                }
             }
-            authors.add(author.getDisplayName());
-            try {
-                changedFiles += entry.getAffectedFiles().size();
-            } catch (UnsupportedOperationException e) {
-                LOGGER.log(INFO, "Unable to collect the affected files for job {0}",
-                        build.getProject().getFullDisplayName());
-                return null;
-            }
-        }
-        if (changedFiles == 0) {
-            LOGGER.log(FINE, "No changes detected");
-            return null;
         }
 
-        return Messages.StartWithChanges(StringUtils.join(authors, ", "), changedFiles);
+        ret.put("COMMIT_MESSAGE", commitMessage);
+        ret.put("COMMIT_MESSAGE_TEXT", commitMessageText);
+        ret.put("CHANGES", changes);
+        ret.put("CHANGES_OR_CAUSE", changes != null ? changes : cause);
+        return ret;
     }
 
     private Map<String, String> getTestData(Run<?, ?> run) {
@@ -122,5 +132,9 @@ public class BuildUtils {
             results.put("TEST_COUNT", String.valueOf(testResults.getTotalCount()));
         }
         return results;
+    }
+
+    private String stripMessage(String message) {
+        return Util.fixNull(message).split("\r?\n")[0];
     }
 }

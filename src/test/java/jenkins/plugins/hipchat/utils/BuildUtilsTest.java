@@ -180,6 +180,23 @@ public class BuildUtilsTest {
         assertThat(changesOrCause).isNotNull().isNotEmpty().contains("alice", "bob", "42");
     }
 
+    @Test
+    public void collectedParametersContainCommitMessages() throws Exception {
+        setupMocks();
+        CauseAction mockAction = mock(CauseAction.class);
+        given(mockAction.getShortDescription()).willReturn("buildCause");
+        given(run.getAction(eq(CauseAction.class))).willReturn(mockAction);
+
+        setupChangesMock();
+
+        Map<String, String> collected = buildUtils.collectParametersFor(jenkins, build);
+
+        String commitMessage = collected.get("COMMIT_MESSAGE");
+        assertThat(commitMessage).isNotNull().isEqualTo("&lt;strong&gt;foo&lt;/strong&gt;");
+        String commitMessageText = collected.get("COMMIT_MESSAGE_TEXT");
+        assertThat(commitMessageText).isNotNull().isEqualTo("<strong>foo</strong>");
+    }
+
     private void setupChangesMock() {
         given(build.hasChangeSetComputed()).willReturn(true);
         User mockUser = mock(User.class);
@@ -198,6 +215,8 @@ public class BuildUtilsTest {
         mockList = mock(List.class);
         given(mockList.size()).willReturn(22);
         given(secondMockEntry.getAffectedFiles()).willReturn(mockList);
+        given(secondMockEntry.getMsgEscaped()).willReturn("&lt;strong&gt;foo&lt;/strong&gt;\n\nMore info about fix");
+        given(secondMockEntry.getMsg()).willReturn("<strong>foo</strong>");
 
         given(build.getChangeSet()).willReturn(new FakeChangeLogSet(mockEntry, secondMockEntry));
     }
