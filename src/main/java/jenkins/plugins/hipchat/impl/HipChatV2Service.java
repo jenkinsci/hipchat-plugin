@@ -33,7 +33,7 @@ public class HipChatV2Service extends HipChatService {
     @Override
     public void publish(String message, String color, boolean notify, boolean textFormat) throws NotificationException {
         for (String roomId : roomIds) {
-            logger.log(Level.INFO, "Posting to {0}: {1} {2}", new Object[]{roomId, message, color});
+            logger.log(Level.FINE, "Posting to {0} room: {1} {2}", new Object[]{roomId, message, color});
             CloseableHttpClient httpClient = getHttpClient();
             CloseableHttpResponse httpResponse = null;
 

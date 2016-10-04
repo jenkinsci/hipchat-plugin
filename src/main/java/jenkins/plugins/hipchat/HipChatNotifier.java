@@ -40,6 +40,7 @@ import org.kohsuke.stapler.export.Exported;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.plugins.hipchat.utils.BuildUtils;
 
@@ -240,8 +241,11 @@ public class HipChatNotifier extends Notifier implements MatrixAggregatable {
 
     private void publishNotificationIfEnabled(NotificationType notificationType, AbstractBuild<?, ?> build,
             BuildListener listener) {
+        logger.log(Level.FINE, "Checking if notification {0} is enabled", notificationType);
         NotificationConfig notificationConfig = getNotificationConfig(notificationType);
         if (notificationConfig != null) {
+            logger.log(Level.FINE, "Notification config found for notification type {0}: {1}",
+                    new Object[]{notificationType, notificationConfig.toString()});
             String messageTemplate = Util.fixEmpty(notificationConfig.getMessageTemplate());
             if (messageTemplate == null) {
                 if (notificationType.isStartType()) {
