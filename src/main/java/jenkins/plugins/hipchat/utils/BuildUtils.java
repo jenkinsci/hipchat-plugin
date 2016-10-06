@@ -119,7 +119,7 @@ public class BuildUtils {
 
         ret.put("COMMIT_MESSAGE", commitMessage);
         ret.put("COMMIT_MESSAGE_TEXT", commitMessageText);
-        ret.put("CHANGES", changes);
+        ret.put("CHANGES", changes != null ? changes : Messages.NoChanges());
         ret.put("CHANGES_OR_CAUSE", changes != null ? changes : cause);
         return ret;
     }
