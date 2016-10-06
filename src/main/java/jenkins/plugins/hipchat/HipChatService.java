@@ -1,6 +1,7 @@
 package jenkins.plugins.hipchat;
 
 import hudson.ProxyConfiguration;
+import hudson.Util;
 import java.io.Closeable;
 import java.io.IOException;
 import jenkins.model.Jenkins;
@@ -9,10 +10,14 @@ import jenkins.plugins.hipchat.ext.ProxyRoutePlanner;
 import jenkins.plugins.hipchat.ext.TLSSocketFactory;
 import jenkins.plugins.hipchat.model.NotificationConfig;
 import org.apache.http.HttpEntity;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.config.RequestConfig;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.client.ProxyAuthenticationStrategy;
 import org.apache.http.util.EntityUtils;
 
 public abstract class HipChatService {
@@ -34,6 +39,13 @@ public abstract class HipChatService {
 
             if (proxy != null) {
                 httpClientBuilder.setRoutePlanner(new ProxyRoutePlanner(proxy));
+                if (Util.fixEmpty(proxy.getUserName()) != null) {
+                    BasicCredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+                    credentialsProvider.setCredentials(new AuthScope(proxy.name, proxy.port),
+                            new UsernamePasswordCredentials(proxy.getUserName(), proxy.getPassword()));
+                    httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
+                    httpClientBuilder.setProxyAuthenticationStrategy(new ProxyAuthenticationStrategy());
+                }
             }
         }
 
