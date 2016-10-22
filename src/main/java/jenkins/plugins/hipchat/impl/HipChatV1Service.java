@@ -71,16 +71,4 @@ public class HipChatV1Service extends HipChatService {
             }
         }
     }
-
-    public String getServer() {
-        return server;
-    }
-
-    public String[] getRoomIds() {
-        return roomIds;
-    }
-
-    public String getSendAs() {
-        return sendAs;
-    }
 }

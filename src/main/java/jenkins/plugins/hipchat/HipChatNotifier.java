@@ -531,7 +531,10 @@ public class HipChatNotifier extends Notifier implements MatrixAggregatable {
             }
 
             @Override
-            public HipChatJobProperty newInstance(StaplerRequest sr, JSONObject formData) throws hudson.model.Descriptor.FormException {
+            public HipChatJobProperty newInstance(StaplerRequest sr, JSONObject formData) throws FormException {
+                if (sr == null) {
+                    throw new IllegalArgumentException("staplerRequest must not be null");
+                }
                 return new HipChatJobProperty(sr.getParameter("hipChatProjectRoom"),
                         sr.getParameter("hipChatStartNotification") != null,
                         sr.getParameter("hipChatNotifyAborted") != null,
