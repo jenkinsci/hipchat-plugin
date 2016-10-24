@@ -14,6 +14,7 @@ import hudson.matrix.MatrixRun;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
+import hudson.model.Item;
 import hudson.model.Job;
 import hudson.model.JobPropertyDescriptor;
 import hudson.model.Result;
@@ -22,6 +23,8 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
+import hudson.util.Secret;
 import jenkins.model.Jenkins;
 import jenkins.plugins.hipchat.exceptions.NotificationException;
 import jenkins.plugins.hipchat.impl.HipChatV1Service;
@@ -30,26 +33,29 @@ import jenkins.plugins.hipchat.model.Color;
 import jenkins.plugins.hipchat.model.MatrixTriggerMode;
 import jenkins.plugins.hipchat.model.NotificationConfig;
 import jenkins.plugins.hipchat.model.NotificationType;
+import jenkins.plugins.hipchat.utils.BuildUtils;
+import jenkins.plugins.hipchat.utils.CredentialUtils;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.Exported;
+import org.kohsuke.stapler.AncestorInPath;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import jenkins.plugins.hipchat.utils.BuildUtils;
 
 @SuppressWarnings({"unchecked"})
 public class HipChatNotifier extends Notifier implements MatrixAggregatable {
 
     private static final Logger logger = Logger.getLogger(HipChatNotifier.class.getName());
-    private String token;
-    private String room;
+
+    private transient String token;
     private transient boolean startNotification;
     private transient boolean notifySuccess;
     private transient boolean notifyAborted;
@@ -57,6 +63,8 @@ public class HipChatNotifier extends Notifier implements MatrixAggregatable {
     private transient boolean notifyUnstable;
     private transient boolean notifyFailure;
     private transient boolean notifyBackToNormal;
+    private String credentialId;
+    private String room;
     private List<NotificationConfig> notifications;
     private MatrixTriggerMode matrixTriggerMode;
 
@@ -64,15 +72,23 @@ public class HipChatNotifier extends Notifier implements MatrixAggregatable {
     private String completeJobMessage;
 
     @DataBoundConstructor
-    public HipChatNotifier(String token, String room, List<NotificationConfig> notifications,
+    public HipChatNotifier(String credentialId, String room, List<NotificationConfig> notifications,
             MatrixTriggerMode matrixTriggerMode, String startJobMessage, String completeJobMessage) {
-        this.token = token;
+        this.credentialId = credentialId;
         this.room = room;
         this.notifications = notifications;
         this.matrixTriggerMode = matrixTriggerMode;
 
         this.startJobMessage = startJobMessage;
         this.completeJobMessage = completeJobMessage;
+    }
+
+    public String getCredentialId() {
+        return credentialId;
+    }
+
+    public void setCredentialId(String credentialId) {
+        this.credentialId = credentialId;
     }
 
     public void setStartNotification(boolean startNotification) {
@@ -277,11 +293,15 @@ public class HipChatNotifier extends Notifier implements MatrixAggregatable {
         return null;
     }
 
-    private HipChatService getHipChatService(AbstractBuild<?, ?> build) {
+    private HipChatService getHipChatService(AbstractBuild<?, ?> build) throws NotificationException {
         DescriptorImpl desc = getDescriptor();
-        String authToken = Util.fixEmpty(token) != null ? token : desc.getToken();
-        return getHipChatService(desc.getServer(), authToken, desc.isV2Enabled(), getResolvedRoom(build),
-                desc.getSendAs());
+        StringCredentials credentials = get(CredentialUtils.class).resolveCredential(build.getParent(),
+                Util.fixEmpty(credentialId) != null ? credentialId : desc.getCredentialId(), desc.getServer());
+        if (credentials == null) {
+            throw new NotificationException(Messages.CredentialMissing(credentialId));
+        }
+        return getHipChatService(desc.getServer(), Secret.toString(credentials.getSecret()), desc.isV2Enabled(),
+                getResolvedRoom(build), desc.getSendAs());
     }
 
     /**
@@ -328,8 +348,9 @@ public class HipChatNotifier extends Notifier implements MatrixAggregatable {
     @Extension
     public static class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
+        private transient String token;
         private String server = "api.hipchat.com";
-        private String token;
+        private String credentialId;
         private boolean v2Enabled = false;
         private String room;
         private String sendAs = "Jenkins";
@@ -338,6 +359,13 @@ public class HipChatNotifier extends Notifier implements MatrixAggregatable {
 
         public DescriptorImpl() {
             load();
+            if (Util.fixEmpty(token) != null) {
+                try {
+                    get(CredentialUtils.class).migrateGlobalCredential(this);
+                } catch (IOException ioe) {
+                    logger.log(Level.SEVERE, "Unable to migrate globally stored auth token to a credential", ioe);
+                }
+            }
         }
 
         public String getServer() {
@@ -346,6 +374,14 @@ public class HipChatNotifier extends Notifier implements MatrixAggregatable {
 
         public void setServer(String server) {
             this.server = server;
+        }
+
+        public String getCredentialId() {
+            return credentialId;
+        }
+
+        public void setCredentialId(String credentialId) {
+            this.credentialId = credentialId;
         }
 
         public String getToken() {
@@ -424,15 +460,26 @@ public class HipChatNotifier extends Notifier implements MatrixAggregatable {
             return FormValidation.ok();
         }
 
-        public FormValidation doSendTestNotification(@QueryParameter String server, @QueryParameter String token,
-                @QueryParameter boolean v2Enabled, @QueryParameter String room, @QueryParameter String sendAs) {
-            HipChatService service = getHipChatService(server, token, v2Enabled, room, sendAs);
+        public FormValidation doSendTestNotification(@AncestorInPath AbstractProject<?, ?> context,
+                @QueryParameter String server, @QueryParameter String credentialId, @QueryParameter boolean v2Enabled,
+                @QueryParameter String room, @QueryParameter String sendAs) {
+            StringCredentials credentials = get(CredentialUtils.class).resolveCredential(context, credentialId, server);
+            if (credentials == null) {
+                return FormValidation.error(Messages.CredentialMissing(credentialId));
+            }
+            HipChatService service = getHipChatService(server, Secret.toString(credentials.getSecret()),
+                    v2Enabled, room, sendAs);
             try {
-                service.publish(Messages.TestNotification(++testNotificationCount), "yellow");
+                service.publish(Messages.TestNotification(++testNotificationCount), "yellow", true);
                 return FormValidation.ok(Messages.TestNotificationSent());
             } catch (NotificationException ne) {
                 return FormValidation.error(Messages.TestNotificationFailed(ne.getMessage()));
             }
+        }
+
+        public ListBoxModel doFillCredentialIdItems(@AncestorInPath Item context, @QueryParameter String server) {
+            return get(CredentialUtils.class).getAvailableCredentials(context, credentialId,
+                    Util.fixEmpty(server) == null ? this.server : server);
         }
 
         @Override

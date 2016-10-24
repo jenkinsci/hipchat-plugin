@@ -1,4 +1,4 @@
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:c="/lib/credentials">
     <f:section title="${%Global HipChat Notifier Settings}">
         <f:entry title="${%HipChat Server}" help="/plugin/hipchat/help-globalConfig-hipChatServer.html" field="server">
             <f:textbox default="api.hipchat.com" />
@@ -6,8 +6,8 @@
         <f:entry title="${%Use v2 API}" help="/plugin/hipchat/help-globalConfig-hipChatv2Enabled.html" field="v2Enabled">
             <f:checkbox />
         </f:entry>
-        <f:entry title="${%API Token}" help="/plugin/hipchat/help-globalConfig-hipChatToken.html" field="token">
-            <f:textbox />
+        <f:entry title="${%Credentials}" field="credentialId">
+            <c:select />
         </f:entry>
         <f:entry title="${%Room}" help="/plugin/hipchat/help-globalConfig-hipChatRoom.html" field="room">
             <f:textbox />
@@ -33,6 +33,6 @@
             </f:repeatable>
         </f:entry>
         <f:validateButton method="sendTestNotification" title="${%Test configuration}" progress="${%Testing...}"
-                          with="server,token,v2Enabled,room,sendAs" />
+                          with="server,credentialId,v2Enabled,room,sendAs" />
     </f:section>
 </j:jelly>

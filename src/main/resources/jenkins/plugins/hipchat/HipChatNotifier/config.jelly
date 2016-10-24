@@ -1,5 +1,8 @@
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:c="/lib/credentials">
+    <f:entry title="${%Credentials}" field="credentialId">
+        <c:select />
+    </f:entry>
     <f:entry title="${%Auth Token}" help="/plugin/hipchat/help-projectConfig-token.html">
         <f:textbox name="hipchat.token" value="${instance.token}" />
     </f:entry>
@@ -8,11 +11,11 @@
     </f:entry>
 
     <j:if test="${descriptor.isMatrixProject(it)}">
-      <f:entry title="${%Trigger for matrix projects}" field="matrixTriggerMode">
-          <f:enum field="matrixTriggerMode">
-             ${it.description}
-          </f:enum>
-      </f:entry>
+        <f:entry title="${%Trigger for matrix projects}" field="matrixTriggerMode">
+            <f:enum field="matrixTriggerMode">
+                ${it.description}
+            </f:enum>
+        </f:entry>
     </j:if>
 
     <f:entry title="${%Notifications}" help="/plugin/hipchat/help-projectConfig-hipChatNotifications.html" field="notifications">
