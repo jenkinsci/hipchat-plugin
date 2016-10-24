@@ -128,8 +128,13 @@ public class BuildUtils {
         Map<String, String> results = newHashMapWithExpectedSize(2);
         AbstractTestResultAction testResults = run.getAction(AbstractTestResultAction.class);
         if (testResults != null) {
-            results.put("FAILED_TEST_COUNT", String.valueOf(testResults.getFailCount()));
-            results.put("TEST_COUNT", String.valueOf(testResults.getTotalCount()));
+            int totalCount = testResults.getTotalCount();
+            int failCount = testResults.getFailCount();
+            int skipCount = testResults.getSkipCount();
+            results.put("TEST_COUNT", String.valueOf(totalCount));
+            results.put("FAILED_TEST_COUNT", String.valueOf(failCount));
+            results.put("SKIPPED_TEST_COUNT", String.valueOf(skipCount));
+            results.put("SUCCESS_TEST_COUNT", String.valueOf(totalCount - skipCount - failCount));
         }
         return results;
     }
