@@ -55,13 +55,45 @@ public class HipChatNotifier extends Notifier implements MatrixAggregatable {
 
     private static final Logger logger = Logger.getLogger(HipChatNotifier.class.getName());
 
+    /**
+     * @deprecated Use {@link #credentialId} instead. This field only exists for upgrade purposes.
+     */
+    @Deprecated
     private transient String token;
+    /**
+     * @deprecated Use {@link #notifications} instead. This field only exists for upgrade purposes.
+     */
+    @Deprecated
     private transient boolean startNotification;
+    /**
+     * @deprecated Use {@link #notifications} instead. This field only exists for upgrade purposes.
+     */
+    @Deprecated
     private transient boolean notifySuccess;
+    /**
+     * @deprecated Use {@link #notifications} instead. This field only exists for upgrade purposes.
+     */
+    @Deprecated
     private transient boolean notifyAborted;
+    /**
+     * @deprecated Use {@link #notifications} instead. This field only exists for upgrade purposes.
+     */
+    @Deprecated
     private transient boolean notifyNotBuilt;
+    /**
+     * @deprecated Use {@link #notifications} instead. This field only exists for upgrade purposes.
+     */
+    @Deprecated
     private transient boolean notifyUnstable;
+    /**
+     * @deprecated Use {@link #notifications} instead. This field only exists for upgrade purposes.
+     */
+    @Deprecated
     private transient boolean notifyFailure;
+    /**
+     * @deprecated Use {@link #notifications} instead. This field only exists for upgrade purposes.
+     */
+    @Deprecated
     private transient boolean notifyBackToNormal;
     private String credentialId;
     private String room;
@@ -348,6 +380,10 @@ public class HipChatNotifier extends Notifier implements MatrixAggregatable {
     @Extension
     public static class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
+        /**
+         * @deprecated Use {@link #credentialId} instead. This field only exists for upgrade purposes.
+         */
+        @Deprecated
         private transient String token;
         private String server = "api.hipchat.com";
         private String credentialId;
