@@ -121,7 +121,6 @@ public class HipChatSendStep extends AbstractStepImpl {
 
         @Override
         protected Void run() throws Exception {
-
             if (StringUtils.isBlank(step.message)) {
                 //allow entire run to fail based on failOnError field
                 if (step.failOnError) {
@@ -136,9 +135,9 @@ public class HipChatSendStep extends AbstractStepImpl {
             HipChatNotifier.DescriptorImpl hipChatDesc =
                     Jenkins.getInstance().getDescriptorByType(HipChatNotifier.DescriptorImpl.class);
 
-            String room = step.room != null ? step.room : hipChatDesc.getRoom();
-            String server = step.server != null ? step.server : hipChatDesc.getServer();
-            String sendAs = step.sendAs != null ? step.sendAs : hipChatDesc.getSendAs();
+            String room = firstNonEmpty(step.room, hipChatDesc.getRoom());
+            String server = firstNonEmpty(step.server, hipChatDesc.getServer());
+            String sendAs = firstNonEmpty(step.sendAs, hipChatDesc.getSendAs());
             String credentialId = step.credentialId;
             String token = null;
             if (StringUtils.isEmpty(credentialId)) {
@@ -181,6 +180,10 @@ public class HipChatSendStep extends AbstractStepImpl {
             }
 
             return null;
+        }
+
+        private String firstNonEmpty(String value, String defaultValue) {
+            return StringUtils.isNotEmpty(value) ? value : defaultValue;
         }
     }
 }
