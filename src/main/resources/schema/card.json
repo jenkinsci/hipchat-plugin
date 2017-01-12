@@ -1,0 +1,143 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "type": "object",
+    "definitions": {
+        "icon": {
+            "oneOf": [
+                {
+                    "$ref": "icon.json#/"
+                },
+                {
+                    "type": "string",
+                    "minLength": 1
+                }
+            ]
+        }
+    },
+    "properties": {
+        "style": {
+            "type": "string",
+            "enum": ["file", "image", "application", "link", "media"],
+            "minLength": 1,
+            "maxLength": 16
+        },
+        "description": {
+            "oneOf": [
+                {
+                    "$ref": "description.json#/"
+                },
+                {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1000
+                }
+            ]
+        },
+        "format": {
+            "type": "string",
+            "enum": ["compact", "medium"],
+            "minLength": 1,
+            "maxLength": 25
+        },
+        "url": {
+            "type": "string",
+            "minLength": 1
+        },
+        "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+        },
+        "thumbnail": {
+            "type": "object",
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 250
+                },
+                "width": {
+                    "type": "number"
+                },
+                "url@2x": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 250
+                },
+                "height": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "url"
+            ]
+        },
+        "activity": {
+            "type": "object",
+            "properties": {
+                "html": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "icon": {
+                    "$ref": "#/definitions/icon"
+                }
+            },
+            "required": [
+                "html"
+            ]
+        },
+        "attributes": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "label": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 50
+                    },
+                    "value": {
+                        "type": "object",
+                        "properties": {
+                            "url": {
+                                "type": "string",
+                                "minLength": 1
+                            },
+                            "style": {
+                                "type": "string",
+                                "enum": ["lozenge-success", "lozenge-error", "lozenge-current", "lozenge-complete", "lozenge-moved", "lozenge"],
+                                "minLength": 1
+                            },
+                            "label": {
+                                "type": "string",
+                                "minLength": 1
+                            },
+                            "icon": {
+                                "$ref": "#/definitions/icon"
+                            }
+                        },
+                        "required": [
+                            "label"
+                        ]
+                    }
+                },
+                "required": [
+                    "value"
+                ]
+            }
+        },
+        "id": {
+            "type": "string",
+            "minLength": 1
+        },
+        "icon": {
+            "$ref": "#/definitions/icon"
+        }
+    },
+    "required": [
+        "style",
+        "title",
+        "id"
+    ]
+}

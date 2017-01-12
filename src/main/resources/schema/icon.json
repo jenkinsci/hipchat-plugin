@@ -1,0 +1,17 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "type": "object",
+    "properties": {
+        "url": {
+            "type": "string",
+            "minLength": 1
+        },
+        "url@2x": {
+            "type": "string",
+            "minLength": 1
+        }
+    },
+    "required": [
+        "url"
+    ]
+}
