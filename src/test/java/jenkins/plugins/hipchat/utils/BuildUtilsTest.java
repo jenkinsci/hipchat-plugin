@@ -222,6 +222,24 @@ public class BuildUtilsTest {
     }
 
     @Test
+    public void shouldNotReturnNullIfAffectedFilesCannotBeDetermined() throws Exception {
+        setupMocks();
+        given(build.hasChangeSetComputed()).willReturn(true);
+        User mockUser = mock(User.class);
+        given(mockUser.getDisplayName()).willReturn("alice");
+        ChangeLogSet.Entry mockEntry = mock(ChangeLogSet.Entry.class);
+        given(mockEntry.getAuthor()).willReturn(mockUser);
+        Collection mockList = mock(List.class);
+        given(mockList.size()).willReturn(20);
+        given(mockEntry.getAffectedFiles()).willThrow(UnsupportedOperationException.class);
+        given(build.getChangeSet()).willReturn(new FakeChangeLogSet(mockEntry));
+
+        Map<String, String> collected = buildUtils.collectParametersFor(jenkins, build);
+
+        assertThat(collected.get("CHANGES")).isNotNull();
+    }
+
+    @Test
     public void collectedParametersContainChangesForAbstractBuild() throws Exception {
         setupMocks();
         setupChangesMock();

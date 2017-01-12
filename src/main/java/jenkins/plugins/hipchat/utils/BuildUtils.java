@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
+import javax.annotation.Nonnull;
 import javax.inject.Singleton;
 import jenkins.model.Jenkins;
 import jenkins.plugins.hipchat.Messages;
@@ -78,7 +79,7 @@ public class BuildUtils {
         }
     }
 
-    private Map<String, String> getChangeSetData(AbstractBuild<?, ?> build, String cause) {
+    private @Nonnull Map<String, String> getChangeSetData(AbstractBuild<?, ?> build, String cause) {
         String changes = null;
         String commitMessage = "";
         String commitMessageText = "";
@@ -106,10 +107,9 @@ public class BuildUtils {
                     } catch (UnsupportedOperationException e) {
                         LOGGER.log(INFO, "Unable to collect the affected files for job {0}",
                                 build.getProject().getFullDisplayName());
-                        return null;
                     }
                 }
-                if (changedFiles == 0) {
+                if (changedFiles == 0 && authors.isEmpty()) {
                     LOGGER.log(FINE, "No changes detected");
                 } else {
                     changes = Messages.StartWithChanges(StringUtils.join(authors, ", "), changedFiles);
