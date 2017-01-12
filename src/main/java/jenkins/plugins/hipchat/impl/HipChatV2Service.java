@@ -17,8 +17,9 @@ import org.apache.http.impl.client.CloseableHttpClient;
 
 public class HipChatV2Service extends HipChatService {
 
-    private static final Logger logger = Logger.getLogger(HipChatV2Service.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(HipChatV2Service.class.getName());
     private static final String[] DEFAULT_ROOMS = new String[0];
+    private static final int MAX_MESSAGE_LENGTH = 10000;
 
     private final String server;
     private final String token;
@@ -32,8 +33,12 @@ public class HipChatV2Service extends HipChatService {
 
     @Override
     public void publish(String message, String color, boolean notify, boolean textFormat) throws NotificationException {
+        if (message.length() > MAX_MESSAGE_LENGTH) {
+            LOGGER.log(Level.INFO, "HipChat notification message was too long, truncating to maximum message length");
+            message = message.substring(0, MAX_MESSAGE_LENGTH - 3) + "...";
+        }
         for (String roomId : roomIds) {
-            logger.log(Level.FINE, "Posting to {0} room: {1} {2}", new Object[]{roomId, message, color});
+            LOGGER.log(Level.FINE, "Posting to {0} room: {1} {2}", new Object[]{roomId, message, color});
             CloseableHttpClient httpClient = getHttpClient();
             CloseableHttpResponse httpResponse = null;
 
@@ -55,14 +60,14 @@ public class HipChatV2Service extends HipChatService {
                 String response = readResponse(httpResponse.getEntity());
 
                 if (responseCode != 204) {
-                    if (logger.isLoggable(Level.WARNING)) {
-                        logger.log(Level.WARNING, "HipChat post may have failed. ResponseCode: {0}, Response: {1}",
+                    if (LOGGER.isLoggable(Level.WARNING)) {
+                        LOGGER.log(Level.WARNING, "HipChat post may have failed. ResponseCode: {0}, Response: {1}",
                                 new Object[]{responseCode, response});
                         throw new InvalidResponseCodeException(responseCode);
                     }
                 }
             } catch (IOException ioe) {
-                logger.log(Level.WARNING, "An IO error occurred while posting HipChat notification", ioe);
+                LOGGER.log(Level.WARNING, "An IO error occurred while posting HipChat notification", ioe);
                 throw new NotificationException(Messages.IOException(ioe.toString()));
             } finally {
                 closeQuietly(httpResponse, httpClient);
