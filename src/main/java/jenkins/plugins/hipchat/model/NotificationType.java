@@ -1,15 +1,23 @@
 package jenkins.plugins.hipchat.model;
 
-import static hudson.Util.replaceMacro;
+import static jenkins.plugins.hipchat.model.Constants.*;
 import static jenkins.plugins.hipchat.utils.GuiceUtils.*;
 
 import com.google.common.annotations.VisibleForTesting;
+import hudson.ExtensionList;
+import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.Result;
 import hudson.util.VariableResolver;
+import hudson.util.VariableResolver.ByMap;
 import java.util.Map;
 import jenkins.model.Jenkins;
+import jenkins.plugins.hipchat.CardProvider;
+import jenkins.plugins.hipchat.HipChatNotifier.DescriptorImpl;
 import jenkins.plugins.hipchat.Messages;
+import jenkins.plugins.hipchat.impl.NoopCardProvider;
+import jenkins.plugins.hipchat.model.notifications.Notification;
+import jenkins.plugins.hipchat.model.notifications.Notification.MessageFormat;
 import jenkins.plugins.hipchat.utils.BuildUtils;
 
 public enum NotificationType {
@@ -80,17 +88,31 @@ public enum NotificationType {
         return startType;
     }
 
-    public final String getMessage(AbstractBuild<?, ?> build, String messageTemplate) {
-        return getMessage(get(BuildUtils.class), Jenkins.getInstance(), build, messageTemplate);
+    public final Notification getNotification(NotificationConfig config, AbstractBuild<?, ?> build) {
+        return getNotification(config, build, get(BuildUtils.class), Jenkins.getInstance());
     }
 
     @VisibleForTesting
-    String getMessage(BuildUtils buildUtils, Jenkins jenkins, AbstractBuild<?, ?> build, String messageTemplate) {
-        Map<String, String> messageVariables = buildUtils.collectParametersFor(jenkins, build);
-        messageVariables.put("STATUS", getStatus());
-        messageVariables.put("PRINT_FULL_ENV", messageVariables.toString());
+    Notification getNotification(NotificationConfig config, AbstractBuild<?, ?> build,
+            BuildUtils buildUtils, Jenkins jenkins) {
+        Map<String, String> params = buildUtils.collectParametersFor(jenkins, build);
+        params.put(STATUS, getStatus());
+        params.put(PRINT_FULL_ENV, params.toString());
+        params.put(HIPCHAT_MESSAGE_TEMPLATE, config.getMessageTemplate());
+        ByMap<String> resolver = new VariableResolver.ByMap<>(params);
 
-        return replaceMacro(messageTemplate, new VariableResolver.ByMap<String>(messageVariables));
+        CardProvider cardProvider = ExtensionList.lookup(CardProvider.class)
+                .getDynamic(jenkins.getDescriptorByType(DescriptorImpl.class).getCardProvider());
+        if (cardProvider == null) {
+            cardProvider = new NoopCardProvider();
+        }
+
+        return new Notification()
+                .withColor(config.getColor())
+                .withMessageFormat(config.isTextFormat() ? MessageFormat.TEXT : MessageFormat.HTML)
+                .withNotify(config.isNotifyEnabled())
+                .withMessage(Util.replaceMacro(config.getMessageTemplate(), resolver))
+                .withCard(cardProvider.getCard(build, params));
     }
 
     public static final NotificationType fromResults(Result previousResult, Result result) {

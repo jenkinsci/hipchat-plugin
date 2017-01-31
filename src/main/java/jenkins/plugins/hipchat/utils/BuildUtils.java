@@ -3,6 +3,7 @@ package jenkins.plugins.hipchat.utils;
 import static com.google.common.base.Throwables.propagate;
 import static com.google.common.collect.Maps.*;
 import static java.util.logging.Level.*;
+import static jenkins.plugins.hipchat.model.Constants.*;
 
 import com.google.common.collect.Sets;
 import hudson.EnvVars;
@@ -51,10 +52,10 @@ public class BuildUtils {
         merged.putAll(getEnvironmentVariables(run));
         merged.putAll(getTestData(run));
         String cause = getCause(run);
-        merged.put("DURATION", run.getDurationString());
-        merged.put("URL", DisplayURLProvider.get().getRunURL(run));
-        merged.put("CAUSE", cause);
-        merged.put("JOB_DISPLAY_NAME", run.getParent().getDisplayName());
+        merged.put(DURATION, run.getDurationString());
+        merged.put(URL, DisplayURLProvider.get().getRunURL(run));
+        merged.put(CAUSE, cause);
+        merged.put(JOB_DISPLAY_NAME, run.getParent().getDisplayName());
         merged.putAll(getChangeSetData(build, cause));
 
         return merged;
@@ -117,10 +118,10 @@ public class BuildUtils {
             }
         }
 
-        ret.put("COMMIT_MESSAGE", commitMessage);
-        ret.put("COMMIT_MESSAGE_TEXT", commitMessageText);
-        ret.put("CHANGES", changes != null ? changes : Messages.NoChanges());
-        ret.put("CHANGES_OR_CAUSE", changes != null ? changes : cause);
+        ret.put(COMMIT_MESSAGE, commitMessage);
+        ret.put(COMMIT_MESSAGE_TEXT, commitMessageText);
+        ret.put(CHANGES, changes != null ? changes : Messages.NoChanges());
+        ret.put(CHANGES_OR_CAUSE, changes != null ? changes : cause);
         return ret;
     }
 
@@ -131,10 +132,11 @@ public class BuildUtils {
             int totalCount = testResults.getTotalCount();
             int failCount = testResults.getFailCount();
             int skipCount = testResults.getSkipCount();
-            results.put("TEST_COUNT", String.valueOf(totalCount));
-            results.put("FAILED_TEST_COUNT", String.valueOf(failCount));
-            results.put("SKIPPED_TEST_COUNT", String.valueOf(skipCount));
-            results.put("SUCCESS_TEST_COUNT", String.valueOf(totalCount - skipCount - failCount));
+            results.put(TEST_COUNT, String.valueOf(totalCount));
+            results.put(FAILED_TEST_COUNT, String.valueOf(failCount));
+            results.put(SKIPPED_TEST_COUNT, String.valueOf(skipCount));
+            results.put(SUCCESS_TEST_COUNT, String.valueOf(totalCount - skipCount - failCount));
+            results.put(TEST_REPORT_PATH, testResults.getUrlName());
         }
         return results;
     }

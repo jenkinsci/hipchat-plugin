@@ -15,6 +15,9 @@
         <f:entry title="${%Send As}" help="/plugin/hipchat/help-globalConfig-hipChatSendAs.html" field="sendAs">
             <f:textbox default="Jenkins" />
         </f:entry>
+        <f:entry title="${%Card Provider}" help="/plugin/hipchat/help-globalConfig-hipChatCardProvider.html" field="cardProvider">
+            <f:select />
+        </f:entry>
         <f:entry title="${%Default notifications}" help="/plugin/hipchat/help-globalConfig-hipChatDefaultNotifications.html" field="defaultNotifications">
             <table width="100%">
                 <tr style="text-align:left">

@@ -97,6 +97,11 @@
                 <version>2.8.5</version>
             </dependency>
             <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>2.8.5</version>
+            </dependency>
+            <dependency>
                 <groupId>org.jenkins-ci.plugins.workflow</groupId>
                 <artifactId>workflow-cps</artifactId>
                 <version>${workflow.version}</version>
@@ -177,6 +182,10 @@
             <artifactId>jackson-annotations</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.jenkins-ci.plugins.workflow</groupId>
             <artifactId>workflow-step-api</artifactId>
             <classifier>tests</classifier>
@@ -246,10 +255,12 @@
                 <configuration>
                     <sourceDirectory>${basedir}/src/main/resources/schema</sourceDirectory>
                     <outputDirectory>${project.build.directory}/generated-sources/json-schema</outputDirectory>
-                    <targetPackage>jenkins.plugins.hipchat.model.cards</targetPackage>
+                    <targetPackage>jenkins.plugins.hipchat.model.notifications</targetPackage>
                     <targetVersion>1.7</targetVersion>
+                    <generateBuilders>true</generateBuilders>
                     <includeAdditionalProperties>false</includeAdditionalProperties>
                     <initializeCollections>false</initializeCollections>
+                    <usePrimitives>true</usePrimitives>
                 </configuration>
             </plugin>
         </plugins>

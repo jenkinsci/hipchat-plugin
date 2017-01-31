@@ -1,5 +1,6 @@
 package jenkins.plugins.hipchat.utils;
 
+import static jenkins.plugins.hipchat.model.Constants.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.*;
 
@@ -126,7 +127,7 @@ public class BuildUtilsTest {
 
         Map<String, String> collected = buildUtils.collectParametersFor(jenkins, run);
 
-        assertThat(collected).containsEntry("DURATION", "3,9 sec");
+        assertThat(collected).containsEntry(DURATION, "3,9 sec");
     }
 
     @Test
@@ -138,7 +139,7 @@ public class BuildUtilsTest {
 
         Map<String, String> collected = buildUtils.collectParametersFor(jenkins, run);
 
-        assertThat(collected).containsEntry("URL", getRootUrl() + "job/test%20project/1/");
+        assertThat(collected).containsEntry(URL, getRootUrl() + "job/test%20project/1/");
     }
 
     @Test
@@ -150,7 +151,7 @@ public class BuildUtilsTest {
 
         Map<String, String> collected = buildUtils.collectParametersFor(jenkins, run);
 
-        assertThat(collected).containsEntry("CAUSE", "buildCause");
+        assertThat(collected).containsEntry(CAUSE, "buildCause");
     }
 
     @Test
@@ -162,7 +163,7 @@ public class BuildUtilsTest {
 
         Map<String, String> collected = buildUtils.collectParametersFor(jenkins, run);
 
-        assertThat(collected).containsEntry("CHANGES_OR_CAUSE", "buildCause");
+        assertThat(collected).containsEntry(CHANGES_OR_CAUSE, "buildCause");
     }
 
     @Test
@@ -176,7 +177,7 @@ public class BuildUtilsTest {
 
         Map<String, String> collected = buildUtils.collectParametersFor(jenkins, build);
 
-        String changesOrCause = collected.get("CHANGES_OR_CAUSE");
+        String changesOrCause = collected.get(CHANGES_OR_CAUSE);
         assertThat(changesOrCause).isNotNull().isNotEmpty().contains("alice", "bob", "42");
     }
 
@@ -191,9 +192,9 @@ public class BuildUtilsTest {
 
         Map<String, String> collected = buildUtils.collectParametersFor(jenkins, build);
 
-        String commitMessage = collected.get("COMMIT_MESSAGE");
+        String commitMessage = collected.get(COMMIT_MESSAGE);
         assertThat(commitMessage).isNotNull().isEqualTo("&lt;strong&gt;foo&lt;/strong&gt;");
-        String commitMessageText = collected.get("COMMIT_MESSAGE_TEXT");
+        String commitMessageText = collected.get(COMMIT_MESSAGE_TEXT);
         assertThat(commitMessageText).isNotNull().isEqualTo("<strong>foo</strong>");
     }
 
@@ -236,7 +237,7 @@ public class BuildUtilsTest {
 
         Map<String, String> collected = buildUtils.collectParametersFor(jenkins, build);
 
-        assertThat(collected.get("CHANGES")).isNotNull();
+        assertThat(collected.get(CHANGES)).isNotNull();
     }
 
     @Test
@@ -245,7 +246,7 @@ public class BuildUtilsTest {
         setupChangesMock();
         Map<String, String> collected = buildUtils.collectParametersFor(jenkins, build);
 
-        String changes = collected.get("CHANGES");
+        String changes = collected.get(CHANGES);
         assertThat(changes).isNotNull().isNotEmpty().contains("alice", "bob", "42");
     }
 
@@ -256,7 +257,7 @@ public class BuildUtilsTest {
 
         Map<String, String> collected = buildUtils.collectParametersFor(jenkins, run);
 
-        assertThat(collected).containsEntry("JOB_DISPLAY_NAME", "test project");
+        assertThat(collected).containsEntry(JOB_DISPLAY_NAME, "test project");
     }
 
     @Test
@@ -268,8 +269,8 @@ public class BuildUtilsTest {
 
         Map<String, String> collected = buildUtils.collectParametersFor(jenkins, run);
 
-        assertThat(collected).containsEntry("FAILED_TEST_COUNT", "13");
-        assertThat(collected).containsEntry("TEST_COUNT", "21");
+        assertThat(collected).containsEntry(FAILED_TEST_COUNT, "13");
+        assertThat(collected).containsEntry(TEST_COUNT, "21");
     }
 
     private class FakeChangeLogSet extends ChangeLogSet {

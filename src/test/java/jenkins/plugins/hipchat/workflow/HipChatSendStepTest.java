@@ -2,7 +2,7 @@ package jenkins.plugins.hipchat.workflow;
 
 import hudson.model.Result;
 import jenkins.plugins.hipchat.Messages;
-import jenkins.plugins.hipchat.model.Color;
+import jenkins.plugins.hipchat.model.notifications.Notification.Color;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.steps.StepConfigTester;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;

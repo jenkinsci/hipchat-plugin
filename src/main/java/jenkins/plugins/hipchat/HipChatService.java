@@ -8,7 +8,9 @@ import jenkins.model.Jenkins;
 import jenkins.plugins.hipchat.exceptions.NotificationException;
 import jenkins.plugins.hipchat.ext.ProxyRoutePlanner;
 import jenkins.plugins.hipchat.ext.TLSSocketFactory;
-import jenkins.plugins.hipchat.model.NotificationConfig;
+import jenkins.plugins.hipchat.model.notifications.Notification;
+import jenkins.plugins.hipchat.model.notifications.Notification.Color;
+import jenkins.plugins.hipchat.model.notifications.Notification.MessageFormat;
 import org.apache.http.HttpEntity;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -59,24 +61,26 @@ public abstract class HipChatService {
      * @param color The notification color to use.
      * @throws NotificationException If there was an error while publishing the notification.
      * @deprecated This method currently does not expose all the available HipChat functionalities, use
-     * {@link #publish(jenkins.plugins.hipchat.model.NotificationConfig, java.lang.String)} instead.
+     * {@link #publish(jenkins.plugins.hipchat.model.notifications.Notification)} instead.
      */
     @Deprecated
     public final void publish(String message, String color) throws NotificationException {
         publish(message, color, !color.equalsIgnoreCase("green"));
     }
 
-    public final void publish(NotificationConfig notificationConfig, String message) throws NotificationException {
-        publish(message, notificationConfig.getColor().toString(), notificationConfig.isNotifyEnabled(),
-                notificationConfig.isTextFormat());
-    }
-
     public void publish(String message, String color, boolean notify) throws NotificationException {
         publish(message, color, notify, false);
     }
 
-    public abstract void publish(String message, String color, boolean notify, boolean textFormat)
-            throws NotificationException;
+    public void publish(String message, String color, boolean notify, boolean textFormat) throws NotificationException {
+        publish(new Notification()
+                .withMessage(message)
+                .withColor(Color.fromValue(color))
+                .withNotify(notify)
+                .withMessageFormat(textFormat ? MessageFormat.TEXT : MessageFormat.HTML));
+    }
+
+    public abstract void publish(Notification notification) throws NotificationException;
 
     protected final String readResponse(HttpEntity entity) throws IOException {
         return entity != null ? EntityUtils.toString(entity) : null;

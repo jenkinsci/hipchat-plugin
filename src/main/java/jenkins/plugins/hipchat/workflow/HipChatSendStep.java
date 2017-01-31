@@ -18,7 +18,7 @@ import jenkins.plugins.hipchat.HipChatNotifier;
 import jenkins.plugins.hipchat.HipChatService;
 import jenkins.plugins.hipchat.Messages;
 import jenkins.plugins.hipchat.exceptions.NotificationException;
-import jenkins.plugins.hipchat.model.Color;
+import jenkins.plugins.hipchat.model.notifications.Notification.Color;
 import jenkins.plugins.hipchat.utils.BuildUtils;
 import jenkins.plugins.hipchat.utils.CredentialUtils;
 import org.apache.commons.lang.StringUtils;

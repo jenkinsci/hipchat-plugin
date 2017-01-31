@@ -1,5 +1,7 @@
 package jenkins.plugins.hipchat.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import hudson.Util;
 import java.io.IOException;
 import java.util.logging.Level;
@@ -8,7 +10,7 @@ import jenkins.plugins.hipchat.HipChatService;
 import jenkins.plugins.hipchat.Messages;
 import jenkins.plugins.hipchat.exceptions.InvalidResponseCodeException;
 import jenkins.plugins.hipchat.exceptions.NotificationException;
-import net.sf.json.JSONObject;
+import jenkins.plugins.hipchat.model.notifications.Notification;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
@@ -20,6 +22,7 @@ public class HipChatV2Service extends HipChatService {
     private static final Logger LOGGER = Logger.getLogger(HipChatV2Service.class.getName());
     private static final String[] DEFAULT_ROOMS = new String[0];
     private static final int MAX_MESSAGE_LENGTH = 10000;
+    private static final ObjectWriter writer = new ObjectMapper().writerWithView(Notification.class);
 
     private final String server;
     private final String token;
@@ -32,13 +35,13 @@ public class HipChatV2Service extends HipChatService {
     }
 
     @Override
-    public void publish(String message, String color, boolean notify, boolean textFormat) throws NotificationException {
-        if (message.length() > MAX_MESSAGE_LENGTH) {
+    public void publish(Notification notification) throws NotificationException {
+        if (notification.getMessage().length() > MAX_MESSAGE_LENGTH) {
             LOGGER.log(Level.INFO, "HipChat notification message was too long, truncating to maximum message length");
-            message = message.substring(0, MAX_MESSAGE_LENGTH - 3) + "...";
+            notification.setMessage(notification.getMessage().substring(0, MAX_MESSAGE_LENGTH - 3) + "...");
         }
         for (String roomId : roomIds) {
-            LOGGER.log(Level.FINE, "Posting to {0} room: {1} {2}", new Object[]{roomId, message, color});
+            LOGGER.log(Level.FINE, "Posting to {0} room: {1}", new Object[]{roomId, notification});
             CloseableHttpClient httpClient = getHttpClient();
             CloseableHttpResponse httpResponse = null;
 
@@ -46,13 +49,7 @@ public class HipChatV2Service extends HipChatService {
                 HttpPost post = new HttpPost("https://" + server + "/v2/room/" + Util.rawEncode(roomId)
                         + "/notification");
                 post.addHeader("Authorization", "Bearer " + token);
-
-                JSONObject notification = new JSONObject();
-                notification.put("message", message);
-                notification.put("message_format", textFormat ? "text" : "html");
-                notification.put("color", color);
-                notification.put("notify", notify);
-                post.setEntity(new StringEntity(notification.toString(), ContentType.APPLICATION_JSON));
+                post.setEntity(new StringEntity(writer.writeValueAsString(notification), ContentType.APPLICATION_JSON));
 
                 httpResponse = httpClient.execute(post);
                 int responseCode = httpResponse.getStatusLine().getStatusCode();

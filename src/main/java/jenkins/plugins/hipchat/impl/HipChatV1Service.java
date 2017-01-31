@@ -10,6 +10,7 @@ import jenkins.plugins.hipchat.HipChatService;
 import jenkins.plugins.hipchat.Messages;
 import jenkins.plugins.hipchat.exceptions.InvalidResponseCodeException;
 import jenkins.plugins.hipchat.exceptions.NotificationException;
+import jenkins.plugins.hipchat.model.notifications.Notification;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -35,22 +36,22 @@ public class HipChatV1Service extends HipChatService {
     }
 
     @Override
-    public void publish(String message, String color, boolean notify, boolean textFormat) throws NotificationException {
+    public void publish(Notification notification) throws NotificationException {
         for (String roomId : roomIds) {
-            logger.log(Level.FINE, "Posting: {0} to {1}: {2} {3}", new Object[]{sendAs, roomId, message, color});
+            logger.log(Level.FINE, "Posting: {0} to {1}: {2}", new Object[]{sendAs, roomId, notification});
             CloseableHttpClient httpClient = getHttpClient();
             CloseableHttpResponse httpResponse = null;
 
             try {
                 HttpPost post = new HttpPost("https://" + server + "/v1/rooms/message");
-                List<NameValuePair> nvps = new ArrayList<NameValuePair>(6);
+                List<NameValuePair> nvps = new ArrayList<>(6);
                 nvps.add(new BasicNameValuePair("auth_token", token));
                 nvps.add(new BasicNameValuePair("from", sendAs));
                 nvps.add(new BasicNameValuePair("room_id", roomId));
-                nvps.add(new BasicNameValuePair("message", message));
-                nvps.add(new BasicNameValuePair("message_format", textFormat ? "text" : "html"));
-                nvps.add(new BasicNameValuePair("color", color));
-                nvps.add(new BasicNameValuePair("notify", notify ? "1" : "0"));
+                nvps.add(new BasicNameValuePair("message", notification.getMessage()));
+                nvps.add(new BasicNameValuePair("message_format", notification.getMessageFormat().value()));
+                nvps.add(new BasicNameValuePair("color", notification.getColor().value()));
+                nvps.add(new BasicNameValuePair("notify", notification.isNotify() ? "1" : "0"));
                 post.setEntity(new UrlEncodedFormEntity(nvps, "UTF-8"));
 
                 httpResponse = httpClient.execute(post);

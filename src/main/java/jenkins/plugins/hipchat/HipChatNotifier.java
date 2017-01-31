@@ -4,6 +4,7 @@ import static jenkins.plugins.hipchat.utils.GuiceUtils.*;
 import static jenkins.plugins.hipchat.model.NotificationType.*;
 
 import hudson.Extension;
+import hudson.ExtensionList;
 import hudson.Launcher;
 import hudson.Util;
 import hudson.matrix.MatrixAggregatable;
@@ -24,15 +25,17 @@ import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import hudson.util.ListBoxModel.Option;
 import hudson.util.Secret;
 import jenkins.model.Jenkins;
 import jenkins.plugins.hipchat.exceptions.NotificationException;
+import jenkins.plugins.hipchat.impl.DefaultCardProvider;
 import jenkins.plugins.hipchat.impl.HipChatV1Service;
 import jenkins.plugins.hipchat.impl.HipChatV2Service;
-import jenkins.plugins.hipchat.model.Color;
 import jenkins.plugins.hipchat.model.MatrixTriggerMode;
 import jenkins.plugins.hipchat.model.NotificationConfig;
 import jenkins.plugins.hipchat.model.NotificationType;
+import jenkins.plugins.hipchat.model.notifications.Notification.Color;
 import jenkins.plugins.hipchat.utils.BuildUtils;
 import jenkins.plugins.hipchat.utils.CredentialUtils;
 import net.sf.json.JSONObject;
@@ -304,9 +307,10 @@ public class HipChatNotifier extends Notifier implements MatrixAggregatable {
                             ? getDescriptor().getCompleteJobMessageDefault() : getCompleteJobMessage();
                 }
             }
+            notificationConfig = notificationConfig.overrideMessageTemplate(messageTemplate);
 
             try {
-                getHipChatService(build).publish(notificationConfig, notificationType.getMessage(build, messageTemplate));
+                getHipChatService(build).publish(notificationType.getNotification(notificationConfig, build));
                 listener.getLogger().println(Messages.NotificationSuccessful(getResolvedRoom(build)));
             } catch (NotificationException ne) {
                 listener.getLogger().println(Messages.NotificationFailed(ne.getMessage()));
@@ -390,6 +394,7 @@ public class HipChatNotifier extends Notifier implements MatrixAggregatable {
         private boolean v2Enabled = false;
         private String room;
         private String sendAs = "Jenkins";
+        private String cardProvider = DefaultCardProvider.class.getName();
         private List<NotificationConfig> defaultNotifications;
         private static int testNotificationCount = 0;
 
@@ -452,6 +457,14 @@ public class HipChatNotifier extends Notifier implements MatrixAggregatable {
             this.sendAs = sendAs;
         }
 
+        public String getCardProvider() {
+            return cardProvider;
+        }
+
+        public void setCardProvider(String cardProvider) {
+            this.cardProvider = cardProvider;
+        }
+
         public List<NotificationConfig> getDefaultNotifications() {
             return defaultNotifications;
         }
@@ -511,6 +524,16 @@ public class HipChatNotifier extends Notifier implements MatrixAggregatable {
             } catch (NotificationException ne) {
                 return FormValidation.error(Messages.TestNotificationFailed(ne.getMessage()));
             }
+        }
+
+        public ListBoxModel doFillCardProviderItems() {
+            ExtensionList<CardProvider> providers = ExtensionList.lookup(CardProvider.class);
+            List<Option> clazzNames = new ArrayList<>(providers.size());
+            for (CardProvider provider : providers) {
+                clazzNames.add(new Option(provider.getDescriptor().getDisplayName(), provider.getClass().getName(),
+                        provider.getClass().getName().equals(cardProvider)));
+            }
+            return new ListBoxModel(clazzNames);
         }
 
         public ListBoxModel doFillCredentialIdItems(@AncestorInPath Item context, @QueryParameter String server) {
