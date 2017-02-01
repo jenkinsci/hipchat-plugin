@@ -123,11 +123,11 @@ public class BuildUtilsTest {
     @Test
     public void collectedParametersContainDurationFromBuild() throws Exception {
         setupMocks();
-        given(run.getDurationString()).willReturn("3,9 sec");
+        given(run.getDuration()).willReturn(39000l);
 
         Map<String, String> collected = buildUtils.collectParametersFor(jenkins, run);
 
-        assertThat(collected).containsEntry(DURATION, "3,9 sec");
+        assertThat(collected).containsEntry(DURATION, "39 sec");
     }
 
     @Test

@@ -52,7 +52,7 @@ public class BuildUtils {
         merged.putAll(getEnvironmentVariables(run));
         merged.putAll(getTestData(run));
         String cause = getCause(run);
-        merged.put(DURATION, run.getDurationString());
+        merged.put(DURATION, Util.getTimeSpanString(run.getDuration()));
         merged.put(BLUE_OCEAN_URL, DisplayURLProvider.get().getRunURL(run));
         merged.put(URL, jenkins.getRootUrl() + run.getUrl());
         merged.put(CAUSE, cause);
