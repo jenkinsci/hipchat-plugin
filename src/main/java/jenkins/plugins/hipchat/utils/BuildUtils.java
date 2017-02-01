@@ -53,7 +53,8 @@ public class BuildUtils {
         merged.putAll(getTestData(run));
         String cause = getCause(run);
         merged.put(DURATION, run.getDurationString());
-        merged.put(URL, DisplayURLProvider.get().getRunURL(run));
+        merged.put(BLUE_OCEAN_URL, DisplayURLProvider.get().getRunURL(run));
+        merged.put(URL, jenkins.getRootUrl() + run.getUrl());
         merged.put(CAUSE, cause);
         merged.put(JOB_DISPLAY_NAME, run.getParent().getDisplayName());
         merged.putAll(getChangeSetData(build, cause));

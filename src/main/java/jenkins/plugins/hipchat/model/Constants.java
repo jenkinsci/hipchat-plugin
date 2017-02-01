@@ -7,6 +7,7 @@ public class Constants {
     public static final String HIPCHAT_MESSAGE_TEMPLATE = "HIPCHAT_MESSAGE_TEMPLATE";
     public static final String JOB_DISPLAY_NAME = "JOB_DISPLAY_NAME";
     public static final String CAUSE = "CAUSE";
+    public static final String BLUE_OCEAN_URL = "BLUE_OCEAN_URL";
     public static final String URL = "URL";
     public static final String DURATION = "DURATION";
     public static final String CHANGES_OR_CAUSE = "CHANGES_OR_CAUSE";
