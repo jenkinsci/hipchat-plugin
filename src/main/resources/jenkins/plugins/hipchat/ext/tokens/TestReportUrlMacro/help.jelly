@@ -1,0 +1,7 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core">
+    <dt>$${TEST_REPORT_URL}</dt>
+    <dd>
+        Displays a direct URL pointing to the current build's test report.
+    </dd>
+</j:jelly>

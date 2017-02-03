@@ -1,0 +1,7 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core">
+    <dt>$${BUILD_DURATION}</dt>
+    <dd>
+        Displays the build's duration in human readable format (e.g.: "42 sec")
+    </dd>
+</j:jelly>

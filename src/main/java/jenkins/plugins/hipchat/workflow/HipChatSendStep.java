@@ -2,7 +2,6 @@ package jenkins.plugins.hipchat.workflow;
 
 import hudson.AbortException;
 import hudson.Extension;
-import hudson.Util;
 import hudson.model.Item;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -13,6 +12,7 @@ import javax.inject.Inject;
 
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
+import java.io.IOException;
 import jenkins.model.Jenkins;
 import jenkins.plugins.hipchat.HipChatNotifier;
 import jenkins.plugins.hipchat.HipChatService;
@@ -23,6 +23,8 @@ import jenkins.plugins.hipchat.utils.BuildUtils;
 import jenkins.plugins.hipchat.utils.CredentialUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
+import org.jenkinsci.plugins.tokenmacro.MacroEvaluationException;
+import org.jenkinsci.plugins.tokenmacro.TokenMacro;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousNonBlockingStepExecution;
@@ -165,18 +167,20 @@ public class HipChatSendStep extends AbstractStepImpl {
 
             //attempt to publish message, log NotificationException, will allow run to continue
             try {
-                String message = Util.replaceMacro(step.message,
-                        buildUtils.collectParametersFor(Jenkins.getInstance(), run));
+                String message = TokenMacro.expandAll(run, null, listener,
+                        HipChatNotifier.migrateMessageTemplate(step.message), false, null);
                 hipChatService.publish(message, color.toString(), step.notify, step.textFormat);
                 listener.getLogger().println(Messages.NotificationSuccessful(room));
-            } catch (NotificationException ne) {
-                listener.getLogger().println(Messages.NotificationFailed(ne.getMessage()));
+            } catch (MacroEvaluationException | IOException | NotificationException ex) {
+                listener.getLogger().println(Messages.NotificationFailed(ex.getMessage()));
                 //allow entire run to fail based on failOnError field
                 if (step.failOnError) {
-                    throw new AbortException(Messages.NotificationFailed(ne.getMessage()));
+                    throw new AbortException(Messages.NotificationFailed(ex.getMessage()));
                 } else {
-                    listener.error(Messages.NotificationFailed(ne.getMessage()));
+                    listener.error(Messages.NotificationFailed(ex.getMessage()));
                 }
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
             }
 
             return null;

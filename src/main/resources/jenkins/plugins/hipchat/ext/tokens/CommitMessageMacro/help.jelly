@@ -1,0 +1,11 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core">
+    <dt>$${COMMIT_MESSAGE}</dt>
+    <dd>
+        <span>Displays the content of the last commit message associated with the current build's changeset.</span>
+        <dl>
+            <dt>escape</dt>
+            <dd>If true, the commit message will be HTML escaped. Defaults to true.</dd>
+        </dl>
+    </dd>
+</j:jelly>

@@ -1,0 +1,7 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core">
+    <dt>$${BLUE_OCEAN_URL}</dt>
+    <dd>
+        Displays a Blue Ocean enabled URL for the current build.
+    </dd>
+</j:jelly>

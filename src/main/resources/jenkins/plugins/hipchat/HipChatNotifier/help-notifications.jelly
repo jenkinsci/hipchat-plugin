@@ -1,0 +1,16 @@
+<div xmlns="http://www.w3.org/1999/html">
+    <p>
+        Notifications defined here will override all default notifications configured in the global plugin settings.
+        In case the list is left empty, the default notifications will be sent out.
+    </p>
+    <p>Notification types must occur only once within this setting.</p>
+    <p>
+        If the message template is left empty, the project's default message template will be used. If that's empty as
+        well, then the plugin falls back to the default message templates.
+    </p>
+    <p>
+        The message template may contain any normal build variable (using the <em>$VAR_NAME</em> notation).
+        Additionally the following variables are provided for convenience:
+    </p>
+    <help xmlns="/lib/token-macro" />
+</div>

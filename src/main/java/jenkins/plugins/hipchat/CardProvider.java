@@ -2,8 +2,8 @@ package jenkins.plugins.hipchat;
 
 import hudson.ExtensionPoint;
 import hudson.model.AbstractDescribableImpl;
+import hudson.model.BuildListener;
 import hudson.model.Run;
-import java.util.Map;
 import jenkins.plugins.hipchat.model.notifications.Attribute;
 import jenkins.plugins.hipchat.model.notifications.Card;
 import jenkins.plugins.hipchat.model.notifications.Value;
@@ -24,12 +24,11 @@ public abstract class CardProvider extends AbstractDescribableImpl<CardProvider>
      * Returns a card corresponding to the build notification.
      *
      * @param run The build run.
-     * @param params Parameters that were already collected as part of the notification message generation.
-     * Implementations are advised to reuse already collected build information from here, rather than recalculating
-     * them again based on the run.
+     * @param buildListener The buildListener associated with the current build.
+     * @param message The fully resolved notification message.
      * @return The card that has been constructed for this notification. May be null if no card should be displayed.
      */
-    public abstract Card getCard(Run<?, ?> run, Map<String, String> params);
+    public abstract Card getCard(Run<?, ?> run, BuildListener buildListener, String message);
 
     /**
      * A simple factory method to easily create attribute for the Card. Attributes are individual information fields

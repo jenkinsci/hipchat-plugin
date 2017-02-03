@@ -1,8 +1,10 @@
 package jenkins.plugins.hipchat;
 
+import static jenkins.plugins.hipchat.model.Constants.*;
 import static jenkins.plugins.hipchat.utils.GuiceUtils.*;
 import static jenkins.plugins.hipchat.model.NotificationType.*;
 
+import com.google.common.collect.ImmutableMap;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.Launcher;
@@ -57,6 +59,19 @@ import java.util.logging.Logger;
 public class HipChatNotifier extends Notifier implements MatrixAggregatable {
 
     private static final Logger logger = Logger.getLogger(HipChatNotifier.class.getName());
+    private static final ImmutableMap<String, String> MESSAGE_MIRATION_MAPPING = ImmutableMap.<String, String>builder()
+            .put(DURATION, BUILD_DURATION_MACRO)
+            .put(JOB_DISPLAY_NAME, PROJECT_DISPLAY_NAME_MACRO)
+            .put(TEST_COUNT, TOTAL_TEST_COUNT_MACRO)
+            .put(FAILED_TEST_COUNT, FAILED_TEST_COUNT_MACRO)
+            .put(SKIPPED_TEST_COUNT, SKIPPED_TEST_COUNT_MACRO)
+            .put(SUCCESS_TEST_COUNT, SUCCESS_TEST_COUNT_MACRO)
+            .put(URL, BUILD_URL_MACRO)
+            .put(COMMIT_MESSAGE, COMMIT_MESSAGE_MACRO)
+            .put(COMMIT_MESSAGE_TEXT, ESCAPED_COMMIT_MESSAGE_MACRO)
+            .put(CHANGES, HIPCHAT_CHANGES_MACRO)
+            .put(CHANGES_OR_CAUSE, HIPCHAT_CHANGES_OR_CAUSE_MACRO)
+            .build();
 
     /**
      * @deprecated Use {@link #credentialId} instead. This field only exists for upgrade purposes.
@@ -307,15 +322,19 @@ public class HipChatNotifier extends Notifier implements MatrixAggregatable {
                             ? getDescriptor().getCompleteJobMessageDefault() : getCompleteJobMessage();
                 }
             }
-            notificationConfig = notificationConfig.overrideMessageTemplate(messageTemplate);
+            notificationConfig = notificationConfig.overrideMessageTemplate(migrateMessageTemplate(messageTemplate));
 
             try {
-                getHipChatService(build).publish(notificationType.getNotification(notificationConfig, build));
+                getHipChatService(build).publish(notificationType.getNotification(notificationConfig, build, listener));
                 listener.getLogger().println(Messages.NotificationSuccessful(getResolvedRoom(build)));
             } catch (NotificationException ne) {
                 listener.getLogger().println(Messages.NotificationFailed(ne.getMessage()));
             }
         }
+    }
+
+    public static String migrateMessageTemplate(String oldMessageTemplate) {
+        return Util.replaceMacro(oldMessageTemplate, MESSAGE_MIRATION_MAPPING);
     }
 
     private NotificationConfig getNotificationConfig(NotificationType notificationType) {

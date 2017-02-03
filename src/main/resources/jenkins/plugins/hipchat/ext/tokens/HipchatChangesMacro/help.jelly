@@ -1,0 +1,13 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core">
+    <dt>$${HIPCHAT_CHANGES}</dt>
+    <dd>
+        The Hipchat plugin's idea of short changelog report
+        (e.g.: "Started by changes from alice (42 file(s) changed)"). May be deprecated in the future in favor of the
+        $${CHANGES} variable.
+    </dd>
+    <dt>$${HIPCHAT_CHANGES_OR_CAUSE}</dt>
+    <dd>
+        Either returns the short changelog (as defined above), or the build cause if no change was detected.
+    </dd>
+</j:jelly>
