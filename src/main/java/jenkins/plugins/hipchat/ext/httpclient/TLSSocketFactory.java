@@ -1,4 +1,4 @@
-package jenkins.plugins.hipchat.ext;
+package jenkins.plugins.hipchat.ext.httpclient;
 
 import java.io.IOException;
 import java.util.ArrayList;

@@ -1,4 +1,4 @@
-package jenkins.plugins.hipchat.ext;
+package jenkins.plugins.hipchat.ext.httpclient;
 
 import hudson.ProxyConfiguration;
 import java.net.Proxy;
