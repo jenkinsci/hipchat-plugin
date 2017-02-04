@@ -2,6 +2,7 @@ package jenkins.plugins.hipchat.workflow;
 
 import hudson.AbortException;
 import hudson.Extension;
+import hudson.FilePath;
 import hudson.model.Item;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -167,7 +168,13 @@ public class HipChatSendStep extends AbstractStepImpl {
 
             //attempt to publish message, log NotificationException, will allow run to continue
             try {
-                String message = TokenMacro.expandAll(run, null, listener,
+                FilePath workspace = null;
+                try {
+                    workspace = getContext().get(FilePath.class);
+                } catch (IOException | InterruptedException ex) {
+                    //workspace is not always available, ignore these exceptions
+                }
+                String message = TokenMacro.expandAll(run, workspace, listener,
                         HipChatNotifier.migrateMessageTemplate(step.message), false, null);
                 hipChatService.publish(message, color.toString(), step.notify, step.textFormat);
                 listener.getLogger().println(Messages.NotificationSuccessful(room));
