@@ -2,6 +2,7 @@ package jenkins.plugins.hipchat.workflow;
 
 import hudson.AbortException;
 import hudson.Extension;
+import hudson.ExtensionList;
 import hudson.FilePath;
 import hudson.model.Item;
 import hudson.model.Run;
@@ -15,11 +16,15 @@ import hudson.util.ListBoxModel;
 import hudson.util.Secret;
 import java.io.IOException;
 import jenkins.model.Jenkins;
+import jenkins.plugins.hipchat.CardProvider;
 import jenkins.plugins.hipchat.HipChatNotifier;
 import jenkins.plugins.hipchat.HipChatService;
 import jenkins.plugins.hipchat.Messages;
 import jenkins.plugins.hipchat.exceptions.NotificationException;
+import jenkins.plugins.hipchat.impl.NoopCardProvider;
+import jenkins.plugins.hipchat.model.notifications.Notification;
 import jenkins.plugins.hipchat.model.notifications.Notification.Color;
+import jenkins.plugins.hipchat.model.notifications.Notification.MessageFormat;
 import jenkins.plugins.hipchat.utils.BuildUtils;
 import jenkins.plugins.hipchat.utils.CredentialUtils;
 import org.apache.commons.lang.StringUtils;
@@ -176,7 +181,20 @@ public class HipChatSendStep extends AbstractStepImpl {
                 }
                 String message = TokenMacro.expandAll(run, workspace, listener,
                         HipChatNotifier.migrateMessageTemplate(step.message), false, null);
-                hipChatService.publish(message, color.toString(), step.notify, step.textFormat);
+
+                CardProvider cardProvider = ExtensionList.lookup(CardProvider.class).getDynamic(Jenkins.getInstance()
+                        .getDescriptorByType(jenkins.plugins.hipchat.HipChatNotifier.DescriptorImpl.class)
+                        .getCardProvider());
+                if (cardProvider == null) {
+                    cardProvider = new NoopCardProvider();
+                }
+
+                hipChatService.publish(new Notification()
+                        .withColor(color)
+                        .withMessage(message)
+                        .withCard(cardProvider.getCard(run, listener, message))
+                        .withNotify(step.notify)
+                        .withMessageFormat(step.textFormat ? MessageFormat.TEXT : MessageFormat.HTML));
                 listener.getLogger().println(Messages.NotificationSuccessful(room));
             } catch (MacroEvaluationException | IOException | NotificationException ex) {
                 listener.getLogger().println(Messages.NotificationFailed(ex.getMessage()));

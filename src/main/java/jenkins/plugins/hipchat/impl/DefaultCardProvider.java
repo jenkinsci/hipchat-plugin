@@ -4,8 +4,8 @@ import static jenkins.plugins.hipchat.model.Constants.*;
 import static jenkins.plugins.hipchat.model.notifications.Value.Style.*;
 
 import hudson.Extension;
-import hudson.model.BuildListener;
 import hudson.model.Run;
+import hudson.model.TaskListener;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,17 +31,17 @@ public class DefaultCardProvider extends CardProvider {
     private static final Logger LOGGER = Logger.getLogger(DefaultCardProvider.class.getName());
 
     @Override
-    public Card getCard(Run<?, ?> run, BuildListener buildListener, String message) {
+    public Card getCard(Run<?, ?> run, TaskListener taskListener, String message) {
         Icon icon = new Icon().withUrl("http://bit.ly/2ctIstd");
         try {
             return new Card()
                     .withStyle(Style.APPLICATION)
-                    .withUrl(TokenMacro.expandAll(run, null, buildListener, Constants.BUILD_URL_MACRO))
+                    .withUrl(TokenMacro.expandAll(run, null, taskListener, Constants.BUILD_URL_MACRO))
                     .withFormat(Card.Format.MEDIUM)
                     .withId(UUID.randomUUID().toString())
-                    .withTitle(TokenMacro.expandAll(run, null, buildListener, Messages.CardTitle(), false, null))
+                    .withTitle(TokenMacro.expandAll(run, null, taskListener, Messages.CardTitle(), false, null))
                     .withIcon(icon)
-                    .withAttributes(getAttributes(run, buildListener))
+                    .withAttributes(getAttributes(run, taskListener))
                     .withActivity(new Activity()
                             .withHtml(message)
                             .withIcon(icon));
@@ -54,27 +54,27 @@ public class DefaultCardProvider extends CardProvider {
         return null;
     }
 
-    private List<Attribute> getAttributes(Run<?, ?> run, BuildListener buildListener)
+    private List<Attribute> getAttributes(Run<?, ?> run, TaskListener taskListener)
             throws MacroEvaluationException, IOException, InterruptedException {
         List<Attribute> ret = new ArrayList<>();
-        String count = TokenMacro.expand(run, null, buildListener, SUCCESS_TEST_COUNT_MACRO);
+        String count = TokenMacro.expand(run, null, taskListener, SUCCESS_TEST_COUNT_MACRO);
         if (StringUtils.isNotEmpty(count)) {
             ret.add(attribute(Messages.TestsSuccessful(), count,
                     "0".equals(count) ? LOZENGE_ERROR : LOZENGE_SUCCESS, null));
         }
-        count = TokenMacro.expand(run, null, buildListener, FAILED_TEST_COUNT_MACRO);
+        count = TokenMacro.expand(run, null, taskListener, FAILED_TEST_COUNT_MACRO);
         if (StringUtils.isNotEmpty(count)) {
             ret.add(attribute(Messages.TestsFailed(), count,
                     "0".equals(count) ? LOZENGE_SUCCESS : LOZENGE_ERROR, null));
         }
-        count = TokenMacro.expand(run, null, buildListener, SKIPPED_TEST_COUNT_MACRO);
+        count = TokenMacro.expand(run, null, taskListener, SKIPPED_TEST_COUNT_MACRO);
         if (StringUtils.isNotEmpty(count)) {
             ret.add(attribute(Messages.TestsSkipped(), count,
                     "0".equals(count) ? LOZENGE_SUCCESS : LOZENGE_CURRENT, null));
         }
         if (!ret.isEmpty()) {
             ret.add(attribute(Messages.TestReport(), Messages.Here(), null,
-                    TokenMacro.expand(run, null, buildListener, TEST_REPORT_URL_MACRO)));
+                    TokenMacro.expand(run, null, taskListener, TEST_REPORT_URL_MACRO)));
         }
         return ret.isEmpty() ? null : ret;
     }

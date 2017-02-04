@@ -1,8 +1,8 @@
 package jenkins.plugins.hipchat.impl;
 
 import hudson.Extension;
-import hudson.model.BuildListener;
 import hudson.model.Run;
+import hudson.model.TaskListener;
 import jenkins.plugins.hipchat.CardProvider;
 import jenkins.plugins.hipchat.CardProviderDescriptor;
 import jenkins.plugins.hipchat.Messages;
@@ -12,7 +12,7 @@ import jenkins.plugins.hipchat.model.notifications.Card;
 public class NoopCardProvider extends CardProvider {
 
     @Override
-    public Card getCard(Run<?, ?> run, BuildListener buildListener, String message) {
+    public Card getCard(Run<?, ?> run, TaskListener taskListener, String message) {
         return null;
     }
 
