@@ -8,6 +8,7 @@ import hudson.model.AbstractBuild;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.internal.util.reflection.Whitebox;
 import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -23,5 +24,14 @@ public class BuildDurationMacroTest {
         String result = macro.evaluate(build, null, BUILD_DURATION, null, null);
 
         assertThat(result).isEqualTo("39 sec");
+    }
+
+    @Test
+    public void shouldReturnBuildDurationForUnfinishedBuilds() {
+        given(build.getDuration()).willReturn(0l);
+        Whitebox.setInternalState(build, "timestamp", System.currentTimeMillis() - 5000l);
+        String result = macro.evaluate(build, null, BUILD_DURATION, null, null);
+
+        assertThat(result).isNotEqualTo("0 ms");
     }
 }

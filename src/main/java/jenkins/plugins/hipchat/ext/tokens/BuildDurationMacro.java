@@ -31,7 +31,12 @@ public class BuildDurationMacro extends TokenMacro {
     @Override
     public String evaluate(Run<?, ?> run, FilePath workspace, TaskListener listener, String macroName,
             Map<String, String> arguments, ListMultimap<String, String> argumentMultimap) {
-        return Util.getTimeSpanString(run.getDuration());
+        long duration = run.getDuration();
+        if (duration == 0l) {
+            return Util.getTimeSpanString(System.currentTimeMillis() - run.getStartTimeInMillis());
+        } else {
+            return Util.getTimeSpanString(duration);
+        }
     }
 
     @Override
