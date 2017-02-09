@@ -7,8 +7,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Sets;
 import hudson.Extension;
+import hudson.FilePath;
 import hudson.model.AbstractBuild;
 import hudson.model.CauseAction;
+import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.model.User;
 import hudson.scm.ChangeLogSet;
@@ -69,6 +71,15 @@ public class HipchatChangesMacro extends TokenMacro {
         } else {
             return changes != null ? changes : getCause(context);
         }
+    }
+
+    @Override
+    public String evaluate(Run<?, ?> run, FilePath workspace, TaskListener listener, String macroName, Map<String,
+            String> arguments, ListMultimap<String, String> argumentMultimap) {
+        if (run instanceof AbstractBuild) {
+            return evaluate((AbstractBuild<?, ?>) run, listener, macroName, arguments, argumentMultimap);
+        }
+        return macroName + " is not supported in this context";
     }
 
     @Override

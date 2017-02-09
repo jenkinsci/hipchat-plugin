@@ -4,8 +4,10 @@ import static java.util.logging.Level.*;
 import static jenkins.plugins.hipchat.model.Constants.*;
 
 import hudson.Extension;
+import hudson.FilePath;
 import hudson.Util;
 import hudson.model.AbstractBuild;
+import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.scm.ChangeLogSet;
 import java.util.Collections;
@@ -34,6 +36,14 @@ public class CommitMessageMacro extends DataBoundTokenMacro {
             }
         }
         return "";
+    }
+
+    @Override
+    public String evaluate(Run<?, ?> run, FilePath workspace, TaskListener listener, String macroName) {
+        if (run instanceof AbstractBuild) {
+            return evaluate((AbstractBuild<?, ?>) run, listener, macroName);
+        }
+        return macroName + " is not supported in this context";
     }
 
     @Override
