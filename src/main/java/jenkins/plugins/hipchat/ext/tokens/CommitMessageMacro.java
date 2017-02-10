@@ -10,9 +10,11 @@ import hudson.model.AbstractBuild;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.scm.ChangeLogSet;
+import hudson.scm.ChangeLogSet.Entry;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
+import jenkins.plugins.hipchat.utils.TokenMacroUtils;
 import org.jenkinsci.plugins.tokenmacro.DataBoundTokenMacro;
 
 @Extension
@@ -28,12 +30,7 @@ public class CommitMessageMacro extends DataBoundTokenMacro {
         if (!context.hasChangeSetComputed()) {
             LOGGER.log(FINE, "No changeset computed for job {0}", context.getProject().getFullDisplayName());
         } else {
-            Object[] items = context.getChangeSet().getItems();
-            if (items != null && items.length > 0) {
-                ChangeLogSet.Entry entry = (ChangeLogSet.Entry) items[items.length - 1];
-                LOGGER.log(FINEST, "Entry {0}", entry);
-                return stripMessage(escape ? entry.getMsgEscaped() : entry.getMsg());
-            }
+            return getCommitMessage(context.getChangeSet());
         }
         return "";
     }
@@ -42,8 +39,9 @@ public class CommitMessageMacro extends DataBoundTokenMacro {
     public String evaluate(Run<?, ?> run, FilePath workspace, TaskListener listener, String macroName) {
         if (run instanceof AbstractBuild) {
             return evaluate((AbstractBuild<?, ?>) run, listener, macroName);
+        } else {
+            return getCommitMessage(TokenMacroUtils.getFirstChangeSet(run));
         }
-        return macroName + " is not supported in this context";
     }
 
     @Override
@@ -54,6 +52,18 @@ public class CommitMessageMacro extends DataBoundTokenMacro {
     @Override
     public List<String> getAcceptedMacroNames() {
         return Collections.singletonList(COMMIT_MESSAGE);
+    }
+
+    private String getCommitMessage(ChangeLogSet<? extends Entry> changeSet) {
+        if (changeSet != null) {
+            Object[] items = changeSet.getItems();
+            if (items != null && items.length > 0) {
+                Entry entry = (Entry) items[items.length - 1];
+                LOGGER.log(FINEST, "Entry {0}", entry);
+                return stripMessage(escape ? entry.getMsgEscaped() : entry.getMsg());
+            }
+        }
+        return "";
     }
 
     private String stripMessage(String message) {

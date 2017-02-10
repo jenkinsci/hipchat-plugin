@@ -14,11 +14,13 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.model.User;
 import hudson.scm.ChangeLogSet;
+import hudson.scm.ChangeLogSet.Entry;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 import jenkins.plugins.hipchat.Messages;
+import jenkins.plugins.hipchat.utils.TokenMacroUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.tokenmacro.TokenMacro;
 
@@ -36,14 +38,37 @@ public class HipchatChangesMacro extends TokenMacro {
     @Override
     public String evaluate(AbstractBuild<?, ?> context, TaskListener listener, String macroName,
             Map<String, String> arguments, ListMultimap<String, String> argumentMultimap) {
-        String changes = null;
+        ChangeLogSet<? extends Entry> changeLogSet = null;
         if (!context.hasChangeSetComputed()) {
             LOGGER.log(FINE, "No changeset computed for job {0}", context.getProject().getFullDisplayName());
         } else {
+            changeLogSet = context.getChangeSet();
+        }
+        return getChangesOrCause(context, changeLogSet, macroName);
+    }
+
+    @Override
+    public String evaluate(Run<?, ?> run, FilePath workspace, TaskListener listener, String macroName,
+            Map<String, String> arguments, ListMultimap<String, String> argumentMultimap) {
+        if (run instanceof AbstractBuild) {
+            return evaluate((AbstractBuild<?, ?>) run, listener, macroName, arguments, argumentMultimap);
+        } else {
+            return getChangesOrCause(run, TokenMacroUtils.getFirstChangeSet(run), macroName);
+        }
+    }
+
+    @Override
+    public List<String> getAcceptedMacroNames() {
+        return SUPPORTED_TOKENS;
+    }
+
+    private String getChangesOrCause(Run<?, ?> run, ChangeLogSet<? extends Entry> changeSet, String macroName) {
+        String changes = null;
+        if (changeSet != null) {
             Set<String> authors = Sets.newHashSet();
             int changedFiles = 0;
-            for (Object o : context.getChangeSet().getItems()) {
-                ChangeLogSet.Entry entry = (ChangeLogSet.Entry) o;
+            for (Object o : changeSet.getItems()) {
+                ChangeLogSet.Entry entry = (Entry) o;
                 LOGGER.log(FINEST, "Entry {0}", entry);
 
                 User author = entry.getAuthor();
@@ -54,9 +79,8 @@ public class HipchatChangesMacro extends TokenMacro {
                 authors.add(author.getDisplayName());
                 try {
                     changedFiles += entry.getAffectedFiles().size();
-                } catch (UnsupportedOperationException e) {
-                    LOGGER.log(INFO, "Unable to collect the affected files for job {0}",
-                            context.getProject().getFullDisplayName());
+                } catch (UnsupportedOperationException uoe) {
+                    LOGGER.log(FINE, "Unable to collect the affected files", uoe);
                 }
             }
             if (changedFiles == 0 && authors.isEmpty()) {
@@ -69,25 +93,11 @@ public class HipchatChangesMacro extends TokenMacro {
         if (HIPCHAT_CHANGES.equals(macroName)) {
             return changes != null ? changes : Messages.NoChanges();
         } else {
-            return changes != null ? changes : getCause(context);
+            return changes != null ? changes : getCause(run);
         }
     }
 
-    @Override
-    public String evaluate(Run<?, ?> run, FilePath workspace, TaskListener listener, String macroName, Map<String,
-            String> arguments, ListMultimap<String, String> argumentMultimap) {
-        if (run instanceof AbstractBuild) {
-            return evaluate((AbstractBuild<?, ?>) run, listener, macroName, arguments, argumentMultimap);
-        }
-        return macroName + " is not supported in this context";
-    }
-
-    @Override
-    public List<String> getAcceptedMacroNames() {
-        return SUPPORTED_TOKENS;
-    }
-
-    private String getCause(AbstractBuild<?, ?> context) {
+    private String getCause(Run<?, ?> context) {
         CauseAction cause = context.getAction(CauseAction.class);
         if (cause != null) {
             return cause.getShortDescription();
