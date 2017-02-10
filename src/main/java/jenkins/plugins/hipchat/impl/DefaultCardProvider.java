@@ -32,7 +32,7 @@ public class DefaultCardProvider extends CardProvider {
 
     @Override
     public Card getCard(Run<?, ?> run, TaskListener taskListener, String message) {
-        Icon icon = new Icon().withUrl("http://bit.ly/2ctIstd");
+        Icon icon = new Icon().withUrl("https://bit.ly/2ctIstd");
         try {
             return new Card()
                     .withStyle(Style.APPLICATION)
