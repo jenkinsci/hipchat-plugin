@@ -31,7 +31,7 @@ These settings can be found under **Manage Jenkins** -> **Configure System** and
 * **Credentials**: The 'secret text' kind of credential to be used when accessing HipChat REST endpoints. When using v2 API, the Credentials must be a valid OAuth2 token obtained as described in the [v2 API documentation](https://developer.atlassian.com/hipchat/guide/hipchat-rest-api). When v2 API is disabled, the plugin will use v1 API to perform its operations. The v1 API requires API Tokens (which are different from OAuth2 tokens!).
 * **Room**: Allows to specify the name or ID of the room where the notification(s) should be sent. If the name of the room is not known at the time of the configuration, you can also use build variables (e.g. $HIPCHAT_ROOM). Multiple values can be provided, in which case use comma to separate the values.
 * **Send As**: Specifies the sender of the notification when using the v1 API. The value must be less than 15 characters long.
-* **Card Provider**: Here you can select a card provider implementation which is responsible to render a HipChat Card as needed. See below for more information on custom Card providers.
+* **Card Provider**: Here you can select a card provider implementation which is responsible to render a HipChat Card as needed. See below for more information on custom Card providers. Cards are only supported when v2 version of the HipChat API is in use.
 * **Default notifications**: Configure the default set of notifications. These will be used when there is no notification configured at the job level.
 
 ### Job level configuration
