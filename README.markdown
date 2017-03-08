@@ -32,7 +32,7 @@ These settings can be found under **Manage Jenkins** -> **Configure System** and
 * **Room**: Allows to specify the name or ID of the room where the notification(s) should be sent. If the name of the room is not known at the time of the configuration, you can also use build variables (e.g. $HIPCHAT_ROOM). Multiple values can be provided, in which case use comma to separate the values.
 * **Send As**: Specifies the sender of the notification when using the v1 API. The value must be less than 15 characters long.
 * **Card Provider**: Here you can select a card provider implementation which is responsible to render a HipChat Card as needed. See below for more information on custom Card providers. Cards are only supported when v2 version of the HipChat API is in use.
-* **Default notifications**: Configure the default set of notifications. These will be used when there is no notification configured at the job level.
+* **Default notifications**: Configure the default set of notifications. These will be used when there is no notification configured at the job level. Note that the default notifications are only sent if the HipChat Notifications Post Build Action is added to the job (otherwise the plugin won't get invoked).
 
 ### Job level configuration
 
@@ -40,7 +40,7 @@ To set up the plugin for an individual job, go to the job's configuration page a
 
 * **Credentials**: Use in case you have a room-specific token to override the globally set Credentials.
 * **Project Room**: Allows to specify the name or ID of the room where the notification(s) should be sent. If the name of the room is not known at the time of the configuration, you can also use build variables (e.g. $HIPCHAT_ROOM). Multiple values can be provided, in which case use comma to separate the values.
-* **Notifications**: The list of notifications that should be sent out upon build events. The settings available per notification entry:
+* **Notifications**: The list of notifications that should be sent out upon build events. If this setting is left empty, the plugin will fall back to the Default notifications setting in the Global configuration. The settings available for each notification entry:
   * **Notify Room**: Whether the message should trigger a HipChat notification
   * **Text Format**: When checked, the message will be sent in text format, instead of the default HTML format. When using text format, emoticons will be properly displayed in messages, but links must be printed in full length.
   * **Notification Type**: Select which build status/result should trigger this notification.
