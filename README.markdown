@@ -54,7 +54,14 @@ To set up the plugin for an individual job, go to the job's configuration page a
 
 The message templates used by the plugin now fully support [token-macro](https://github.com/jenkinsci/token-macro-plugin) tokens, for a comprehensive list of the available tokens, please check out the help texts for the message template settings.
 
-In addition to the out of the box supported tokens from the token-macro-plugin (and email-ext-plugin amongst many others), the HipChat plugin also provides the following token implementations:
+In addition to the out of the box supported tokens from the token-macro-plugin, the plugin can also utilize various other tokens provided by other plugins. Having the [email-ext-plugin](https://wiki.jenkins-ci.org/display/JENKINS/Email-ext+plugin) installed on Jenkins will make the following (non-comprehensive list of) tokens available for example:
+* TRIGGER_NAME
+* TEST_COUNTS
+* FAILED_TESTS
+
+If you find that one of the above listed tokens do not work with the plugin, you should probably check first whether the email-ext-plugin is installed on your Jenkins instance. The same rule applies for other third party token provider plugins.
+
+The HipChat plugin also provides the following token implementations:
 
 | Token name | Content | Example value |
 | --- | --- | --- |
