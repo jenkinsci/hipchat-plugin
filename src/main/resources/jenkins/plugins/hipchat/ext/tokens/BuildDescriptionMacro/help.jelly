@@ -1,0 +1,7 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core">
+    <dt>$${BUILD_DESCRIPTION}</dt>
+    <dd>
+        Displays the build's description.
+    </dd>
+</j:jelly>

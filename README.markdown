@@ -66,6 +66,7 @@ The HipChat plugin also provides the following token implementations:
 | Token name | Content | Example value |
 | --- | --- | --- |
 | BLUE_OCEAN_URL | [Blue Ocean UI](https://jenkins.io/projects/blueocean/) friendly link to the currently built job | http://localhost:8080/jenkins/job/foobar/1/display/redirect |
+| BUILD_DESCRIPTION | The description of the current build | Example build description |
 | BUILD_DURATION | The duration of the build in human readable format | 42 min |
 | COMMIT_MESSAGE | The first line of the last changeset's commit message | Initial commit |
 | HIPCHAT_CHANGES | Human readable details of the new changesets or "No changes" if changesets weren't computed for this build | Started by changes from bjensen (1 file(s) changed) |
