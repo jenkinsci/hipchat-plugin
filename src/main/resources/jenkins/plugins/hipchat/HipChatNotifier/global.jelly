@@ -1,6 +1,6 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:c="/lib/credentials">
     <f:section title="${%Global HipChat Notifier Settings}">
-        <f:entry title="${%HipChat Server}" field="server">
+        <f:entry title="${%HipChat Server Host}" field="server">
             <f:textbox default="api.hipchat.com" />
         </f:entry>
         <f:entry title="${%Use v2 API}" field="v2Enabled">

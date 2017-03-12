@@ -1,7 +1,14 @@
 <div xmlns="http://www.w3.org/1999/html">
     <p>
         The default notifications listed here will be used when a given project does not specify which events should
-        trigger HipChat notifications.
+        trigger HipChat notifications. Please note that the default notifications are only sent if the HipChat
+        Notifications Post Build Action is added to the job (otherwise the plugin won't get invoked). In other words: to
+        utilize the default notifications, you'll need to do 3 things:
+        <ul>
+            <li>Configure default notifications in the global settings (i.e. here)</li>
+            <li>Add the HipChat Post Build Action to the job where you want to trigger the default notifications.</li>
+            <li>Leave the job level Notifications setting completely empty.</li>
+        </ul>
     </p>
     <p>Notification types must occur only once within this setting.</p>
     <p>

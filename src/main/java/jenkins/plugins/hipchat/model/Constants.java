@@ -22,6 +22,7 @@ public class Constants {
 
     //supported token macro names
     public static final String BLUE_OCEAN_URL = "BLUE_OCEAN_URL";
+    public static final String BUILD_DESCRIPTION = "BUILD_DESCRIPTION";
     public static final String BUILD_DURATION = "BUILD_DURATION";
     public static final String TEST_REPORT_URL = "TEST_REPORT_URL";
     public static final String HIPCHAT_CHANGES = "HIPCHAT_CHANGES";
