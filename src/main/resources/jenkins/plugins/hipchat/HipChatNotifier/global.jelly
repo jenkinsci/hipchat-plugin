@@ -25,7 +25,8 @@
                     <th width="5%">${%Text Format}</th>
                     <th width="15%">${%Notification Type}</th>
                     <th width="10%">${%Color}</th>
-                    <th width="60%">${%Message template}</th>
+                    <th width="15%">${%Card Icon}</th>
+                    <th width="45%">${%Message template}</th>
                     <th width="5%"></th>
                 </tr>
             </table>

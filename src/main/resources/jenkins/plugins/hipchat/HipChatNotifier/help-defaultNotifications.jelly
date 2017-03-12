@@ -8,6 +8,7 @@
         If the message template is left empty, the project's default message template will be used. If that's empty as
         well, then the plugin falls back to the default message templates.
     </p>
+    <p>The icon URL used with card provider notifications. If it's left empty, a default is provided.</p>
     <p>
         The message template may contain any normal build variable (using the <em>$VAR_NAME</em> notation).
         Additionally the following variables are provided for convenience:

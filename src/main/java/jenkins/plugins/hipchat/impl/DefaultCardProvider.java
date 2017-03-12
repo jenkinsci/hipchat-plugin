@@ -31,8 +31,11 @@ public class DefaultCardProvider extends CardProvider {
     private static final Logger LOGGER = Logger.getLogger(DefaultCardProvider.class.getName());
 
     @Override
-    public Card getCard(Run<?, ?> run, TaskListener taskListener, String message) {
-        Icon icon = new Icon().withUrl("https://bit.ly/2ctIstd");
+    public Card getCard(Run<?, ?> run, TaskListener taskListener, Icon icon, String message) {
+
+        if (icon == null) {
+            icon = new Icon().withUrl("https://bit.ly/2ctIstd");
+        }
         try {
             return new Card()
                     .withStyle(Style.APPLICATION)

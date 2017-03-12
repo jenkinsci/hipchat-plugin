@@ -22,6 +22,7 @@ import jenkins.plugins.hipchat.HipChatService;
 import jenkins.plugins.hipchat.Messages;
 import jenkins.plugins.hipchat.exceptions.NotificationException;
 import jenkins.plugins.hipchat.impl.NoopCardProvider;
+import jenkins.plugins.hipchat.model.notifications.Icon;
 import jenkins.plugins.hipchat.model.notifications.Notification;
 import jenkins.plugins.hipchat.model.notifications.Notification.Color;
 import jenkins.plugins.hipchat.model.notifications.Notification.MessageFormat;
@@ -51,6 +52,9 @@ public class HipChatSendStep extends AbstractStepImpl {
 
     @DataBoundSetter
     public Color color;
+
+    @DataBoundSetter
+    public String icon;
 
     /**
      * @deprecated Use {@link #credentialId instead}.
@@ -192,7 +196,9 @@ public class HipChatSendStep extends AbstractStepImpl {
                 hipChatService.publish(new Notification()
                         .withColor(color)
                         .withMessage(message)
-                        .withCard(cardProvider.getCard(run, listener, message))
+                        .withCard(cardProvider.getCard(run, listener,
+                                (step.icon != null && !step.icon.isEmpty() ? new Icon().withUrl(step.icon) : null),
+                                message))
                         .withNotify(step.notify)
                         .withMessageFormat(step.textFormat ? MessageFormat.TEXT : MessageFormat.HTML));
                 listener.getLogger().println(Messages.NotificationSuccessful(room));

@@ -45,6 +45,7 @@ To set up the plugin for an individual job, go to the job's configuration page a
   * **Text Format**: When checked, the message will be sent in text format, instead of the default HTML format. When using text format, emoticons will be properly displayed in messages, but links must be printed in full length.
   * **Notification Type**: Select which build status/result should trigger this notification.
   * **Color**: Select the color of the notification message.
+  * **Card Icon**: The icon URL to use when using card notifications.
   * **Message template**: The specific message template to use for this notification
 * **Message templates**: These templates are used as default values when the notification-specific message template is not defined.
   * **Job started**: The message to use when the build starts.
@@ -99,7 +100,7 @@ public class MyCoolCardProvider extends CardProvider {
     private static final Logger LOGGER = Logger.getLogger(MyCoolCardProvider.class.getName());
 
     @Override
-    public Card getCard(Run<?, ?> run, TaskListener taskListener, String message) {
+    public Card getCard(Run<?, ?> run, TaskListener taskListener, Icon icon, String message) {
         // implement magic
     }
 

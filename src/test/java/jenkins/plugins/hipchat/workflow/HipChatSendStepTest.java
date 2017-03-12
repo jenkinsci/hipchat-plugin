@@ -25,6 +25,7 @@ public class HipChatSendStepTest {
                 HipChatSendStep step1 = new HipChatSendStep("message");
                 step1.color = Color.GREEN;
                 step1.room = "room";
+                step1.icon = "https://bit.ly/2ctIstd";
                 step1.v2enabled = true;
                 step1.notify = false;
 
