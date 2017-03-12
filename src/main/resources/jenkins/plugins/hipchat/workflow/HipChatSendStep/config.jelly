@@ -4,6 +4,9 @@
     <f:entry field="message" title="${%Message}">
         <f:textbox/>
     </f:entry>
+    <f:entry field="icon" title="${%Card Icon}">
+        <f:textbox/>
+    </f:entry>
     <f:entry field="color" title="${%Color}">
         <f:enum>${it}</f:enum>
     </f:entry>

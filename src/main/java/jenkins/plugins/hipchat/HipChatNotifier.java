@@ -214,25 +214,25 @@ public class HipChatNotifier extends Notifier implements MatrixAggregatable {
         if (notifications == null) {
             notifications = new ArrayList<NotificationConfig>(7);
             if (startNotification) {
-                notifications.add(new NotificationConfig(false, false, STARTED, Color.GREEN, null));
+                notifications.add(new NotificationConfig(false, false, STARTED, Color.GREEN, null, null));
             }
             if (notifySuccess) {
-                notifications.add(new NotificationConfig(false, false, SUCCESS, Color.GREEN, null));
+                notifications.add(new NotificationConfig(false, false, SUCCESS, Color.GREEN, null, null));
             }
             if (notifyAborted) {
-                notifications.add(new NotificationConfig(true, false, ABORTED, Color.GRAY, null));
+                notifications.add(new NotificationConfig(true, false, ABORTED, Color.GRAY, null, null));
             }
             if (notifyNotBuilt) {
-                notifications.add(new NotificationConfig(true, false, NOT_BUILT, Color.GRAY, null));
+                notifications.add(new NotificationConfig(true, false, NOT_BUILT, Color.GRAY, null, null));
             }
             if (notifyUnstable) {
-                notifications.add(new NotificationConfig(true, false, UNSTABLE, Color.YELLOW, null));
+                notifications.add(new NotificationConfig(true, false, UNSTABLE, Color.YELLOW, null, null));
             }
             if (notifyFailure) {
-                notifications.add(new NotificationConfig(true, false, FAILURE, Color.RED, null));
+                notifications.add(new NotificationConfig(true, false, FAILURE, Color.RED, null, null));
             }
             if (notifyBackToNormal) {
-                notifications.add(new NotificationConfig(false, false, BACK_TO_NORMAL, Color.GREEN, null));
+                notifications.add(new NotificationConfig(false, false, BACK_TO_NORMAL, Color.GREEN, null, null));
             }
         }
         return this;

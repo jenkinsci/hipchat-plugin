@@ -17,6 +17,7 @@ import jenkins.plugins.hipchat.HipChatNotifier.DescriptorImpl;
 import jenkins.plugins.hipchat.Messages;
 import jenkins.plugins.hipchat.exceptions.NotificationException;
 import jenkins.plugins.hipchat.impl.NoopCardProvider;
+import jenkins.plugins.hipchat.model.notifications.Icon;
 import jenkins.plugins.hipchat.model.notifications.Notification;
 import jenkins.plugins.hipchat.model.notifications.Notification.MessageFormat;
 import jenkins.plugins.hipchat.utils.BuildUtils;
@@ -100,12 +101,12 @@ public enum NotificationType {
     Notification getNotification(NotificationConfig config, AbstractBuild<?, ?> build, BuildListener buildListener,
             BuildUtils buildUtils, Jenkins jenkins) throws NotificationException {
         String messageTemplate = Util.replaceMacro(config.getMessageTemplate(), ImmutableMap.of(STATUS, getStatus()));
-
         CardProvider cardProvider = ExtensionList.lookup(CardProvider.class)
                 .getDynamic(jenkins.getDescriptorByType(DescriptorImpl.class).getCardProvider());
         if (cardProvider == null) {
             cardProvider = new NoopCardProvider();
         }
+
         try {
             String message = TokenMacro.expandAll(build, buildListener, messageTemplate, false, null);
             return new Notification()
@@ -113,7 +114,9 @@ public enum NotificationType {
                     .withMessageFormat(config.isTextFormat() ? MessageFormat.TEXT : MessageFormat.HTML)
                     .withNotify(config.isNotifyEnabled())
                     .withMessage(message)
-                    .withCard(cardProvider.getCard(build, buildListener, message));
+                    .withCard(cardProvider.getCard(build, buildListener,
+                            (config.getIcon() != null && !config.getIcon().isEmpty() ?
+                                    new Icon().withUrl(config.getIcon()) : null), message));
         } catch (MacroEvaluationException | IOException ex) {
             buildListener.getLogger().println(Messages.MacroEvaluationFailed(ex.toString()));
             throw new NotificationException(Messages.MacroEvaluationFailed(ex.getMessage()), ex);

@@ -13,15 +13,17 @@ public class NotificationConfig implements Describable<NotificationConfig> {
     private final boolean textFormat;
     private final NotificationType notificationType;
     private final Color color;
+    private final String icon;
     private final String messageTemplate;
 
     @DataBoundConstructor
     public NotificationConfig(boolean notifyEnabled, boolean textFormat, NotificationType notificationType, Color color,
-            String messageTemplate) {
+            String icon, String messageTemplate) {
         this.notifyEnabled = notifyEnabled;
         this.textFormat = textFormat;
         this.notificationType = notificationType;
         this.color = color;
+        this.icon = icon;
         this.messageTemplate = messageTemplate;
     }
 
@@ -41,6 +43,10 @@ public class NotificationConfig implements Describable<NotificationConfig> {
         return color;
     }
 
+    public String getIcon() {
+        return icon;
+    }
+
     public String getMessageTemplate() {
         return messageTemplate;
     }
@@ -53,7 +59,7 @@ public class NotificationConfig implements Describable<NotificationConfig> {
      * @return A new {@link NotificationConfig} instance that has its message template updated.
      */
     public NotificationConfig overrideMessageTemplate(String messageTemplate) {
-        return new NotificationConfig(notifyEnabled, textFormat, notificationType, color, messageTemplate);
+        return new NotificationConfig(notifyEnabled, textFormat, notificationType, color, icon, messageTemplate);
     }
 
     @Override
@@ -64,7 +70,7 @@ public class NotificationConfig implements Describable<NotificationConfig> {
     @Override
     public String toString() {
         return "Notification{" + "notifyEnabled=" + notifyEnabled + ", notificationType=" + notificationType
-                + ", color=" + color + ", messageTemplate=" + messageTemplate + '}';
+                + ", color=" + color + ", icon=" + icon + ", messageTemplate=" + messageTemplate + '}';
     }
 
     @Extension
