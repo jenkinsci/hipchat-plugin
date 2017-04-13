@@ -7,12 +7,13 @@ import jenkins.plugins.hipchat.CardProvider;
 import jenkins.plugins.hipchat.CardProviderDescriptor;
 import jenkins.plugins.hipchat.Messages;
 import jenkins.plugins.hipchat.model.notifications.Card;
+import jenkins.plugins.hipchat.model.notifications.Icon;
 
 @Extension
 public class NoopCardProvider extends CardProvider {
 
     @Override
-    public Card getCard(Run<?, ?> run, TaskListener taskListener, String message) {
+    public Card getCard(Run<?, ?> run, TaskListener taskListener, Icon icon, String message) {
         return null;
     }
 

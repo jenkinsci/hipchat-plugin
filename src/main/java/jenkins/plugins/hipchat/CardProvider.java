@@ -6,6 +6,7 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import jenkins.plugins.hipchat.model.notifications.Attribute;
 import jenkins.plugins.hipchat.model.notifications.Card;
+import jenkins.plugins.hipchat.model.notifications.Icon;
 import jenkins.plugins.hipchat.model.notifications.Value;
 
 /**
@@ -25,10 +26,11 @@ public abstract class CardProvider extends AbstractDescribableImpl<CardProvider>
      *
      * @param run The build run.
      * @param taskListener The taskListener associated with the current build.
+     * @param icon The icon to include in the message.
      * @param message The fully resolved notification message.
      * @return The card that has been constructed for this notification. May be null if no card should be displayed.
      */
-    public abstract Card getCard(Run<?, ?> run, TaskListener taskListener, String message);
+    public abstract Card getCard(Run<?, ?> run, TaskListener taskListener, Icon icon, String message);
 
     /**
      * A simple factory method to easily create attribute for the Card. Attributes are individual information fields

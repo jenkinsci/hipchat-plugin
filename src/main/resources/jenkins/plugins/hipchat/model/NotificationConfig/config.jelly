@@ -16,7 +16,10 @@
                 ${it.toString()}
             </f:enum>
         </td>
-        <td style="width: 60%">
+        <td style="width: 15%">
+            <f:textbox field="icon" />
+        </td>
+        <td style="width: 45%">
             <f:textbox field="messageTemplate" />
         </td>
         <td style="width: 5%">
