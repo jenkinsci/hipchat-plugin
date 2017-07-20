@@ -2,6 +2,7 @@ package jenkins.plugins.hipchat.workflow;
 
 import hudson.model.Result;
 import jenkins.plugins.hipchat.Messages;
+import jenkins.plugins.hipchat.model.Constants;
 import jenkins.plugins.hipchat.model.notifications.Notification.Color;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.steps.StepConfigTester;
@@ -25,7 +26,7 @@ public class HipChatSendStepTest {
                 HipChatSendStep step1 = new HipChatSendStep("message");
                 step1.color = Color.GREEN;
                 step1.room = "room";
-                step1.icon = "https://bit.ly/2ctIstd";
+                step1.icon = Constants.DEFAULT_ICON_URL;
                 step1.v2enabled = true;
                 step1.notify = false;
 

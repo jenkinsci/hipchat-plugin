@@ -197,8 +197,7 @@ public class HipChatSendStep extends AbstractStepImpl {
                         .withColor(color)
                         .withMessage(message)
                         .withCard(cardProvider.getCard(run, listener,
-                                (step.icon != null && !step.icon.isEmpty() ? new Icon().withUrl(step.icon) : null),
-                                message))
+                                StringUtils.isEmpty(step.icon) ? null : new Icon().withUrl(step.icon), message))
                         .withNotify(step.notify)
                         .withMessageFormat(step.textFormat ? MessageFormat.TEXT : MessageFormat.HTML));
                 listener.getLogger().println(Messages.NotificationSuccessful(room));

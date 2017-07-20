@@ -26,7 +26,22 @@ public abstract class CardProvider extends AbstractDescribableImpl<CardProvider>
      *
      * @param run The build run.
      * @param taskListener The taskListener associated with the current build.
-     * @param icon The icon to include in the message.
+     * @param message The fully resolved notification message.
+     * @return The card that has been constructed for this notification. May be null if no card should be displayed.
+     * @deprecated Implement {@link #getCard(hudson.model.Run, hudson.model.TaskListener,
+     * jenkins.plugins.hipchat.model.notifications.Icon, java.lang.String)} instead.
+     */
+    @Deprecated
+    public Card getCard(Run<?, ?> run, TaskListener taskListener, String message) {
+        return getCard(run, taskListener, null, message);
+    }
+
+    /**
+     * Returns a card corresponding to the build notification.
+     *
+     * @param run The build run.
+     * @param taskListener The taskListener associated with the current build.
+     * @param icon The icon to include in the message. May be null.
      * @param message The fully resolved notification message.
      * @return The card that has been constructed for this notification. May be null if no card should be displayed.
      */

@@ -4,7 +4,9 @@ import hudson.Extension;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
 import jenkins.model.Jenkins;
+import jenkins.plugins.hipchat.model.notifications.Icon;
 import jenkins.plugins.hipchat.model.notifications.Notification.Color;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 public class NotificationConfig implements Describable<NotificationConfig> {
@@ -45,6 +47,10 @@ public class NotificationConfig implements Describable<NotificationConfig> {
 
     public String getIcon() {
         return icon;
+    }
+
+    public Icon getIconObject() {
+        return StringUtils.isEmpty(icon) ? null : new Icon().withUrl(icon);
     }
 
     public String getMessageTemplate() {

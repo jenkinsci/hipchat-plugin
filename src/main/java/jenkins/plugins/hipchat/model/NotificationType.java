@@ -17,7 +17,6 @@ import jenkins.plugins.hipchat.HipChatNotifier.DescriptorImpl;
 import jenkins.plugins.hipchat.Messages;
 import jenkins.plugins.hipchat.exceptions.NotificationException;
 import jenkins.plugins.hipchat.impl.NoopCardProvider;
-import jenkins.plugins.hipchat.model.notifications.Icon;
 import jenkins.plugins.hipchat.model.notifications.Notification;
 import jenkins.plugins.hipchat.model.notifications.Notification.MessageFormat;
 import jenkins.plugins.hipchat.utils.BuildUtils;
@@ -114,9 +113,7 @@ public enum NotificationType {
                     .withMessageFormat(config.isTextFormat() ? MessageFormat.TEXT : MessageFormat.HTML)
                     .withNotify(config.isNotifyEnabled())
                     .withMessage(message)
-                    .withCard(cardProvider.getCard(build, buildListener,
-                            (config.getIcon() != null && !config.getIcon().isEmpty() ?
-                                    new Icon().withUrl(config.getIcon()) : null), message));
+                    .withCard(cardProvider.getCard(build, buildListener, config.getIconObject(), message));
         } catch (MacroEvaluationException | IOException ex) {
             buildListener.getLogger().println(Messages.MacroEvaluationFailed(ex.toString()));
             throw new NotificationException(Messages.MacroEvaluationFailed(ex.getMessage()), ex);

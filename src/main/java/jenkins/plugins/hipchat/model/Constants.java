@@ -2,6 +2,7 @@ package jenkins.plugins.hipchat.model;
 
 public class Constants {
 
+    public static final String DEFAULT_ICON_URL = "https://bit.ly/2ctIstd";
     public static final String STATUS = "STATUS";
     public static final String HIPCHAT_MESSAGE_TEMPLATE = "HIPCHAT_MESSAGE_TEMPLATE";
 
@@ -41,5 +42,4 @@ public class Constants {
     public static final String ESCAPED_COMMIT_MESSAGE_MACRO = "${" + COMMIT_MESSAGE + ",escape=false}";
     public static final String HIPCHAT_CHANGES_MACRO = "${" + HIPCHAT_CHANGES + "}";
     public static final String HIPCHAT_CHANGES_OR_CAUSE_MACRO = "${" + HIPCHAT_CHANGES_OR_CAUSE + "}";
-
 }

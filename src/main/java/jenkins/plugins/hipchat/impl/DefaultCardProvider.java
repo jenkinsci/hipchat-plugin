@@ -33,10 +33,10 @@ public class DefaultCardProvider extends CardProvider {
 
     @Override
     public Card getCard(Run<?, ?> run, TaskListener taskListener, Icon icon, String message) {
-
         if (icon == null) {
-            icon = new Icon().withUrl("https://bit.ly/2ctIstd");
+            icon = new Icon().withUrl(Constants.DEFAULT_ICON_URL);
         }
+
         try {
             return new Card()
                     .withStyle(Style.APPLICATION)
