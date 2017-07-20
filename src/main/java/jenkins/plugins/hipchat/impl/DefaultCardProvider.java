@@ -59,27 +59,31 @@ public class DefaultCardProvider extends CardProvider {
     }
 
     private List<Attribute> getAttributes(Run<?, ?> run, TaskListener taskListener)
-            throws MacroEvaluationException, IOException, InterruptedException {
+            throws IOException, InterruptedException {
         List<Attribute> ret = new ArrayList<>();
         if (run.getAction(AbstractTestResultAction.class) != null) {
-            String count = TokenMacro.expand(run, null, taskListener, SUCCESS_TEST_COUNT_MACRO);
-            if (StringUtils.isNotEmpty(count)) {
-                ret.add(attribute(Messages.TestsSuccessful(), count,
-                        "0".equals(count) ? LOZENGE_ERROR : LOZENGE_SUCCESS, null));
-            }
-            count = TokenMacro.expand(run, null, taskListener, FAILED_TEST_COUNT_MACRO);
-            if (StringUtils.isNotEmpty(count)) {
-                ret.add(attribute(Messages.TestsFailed(), count,
-                        "0".equals(count) ? LOZENGE_SUCCESS : LOZENGE_ERROR, null));
-            }
-            count = TokenMacro.expand(run, null, taskListener, SKIPPED_TEST_COUNT_MACRO);
-            if (StringUtils.isNotEmpty(count)) {
-                ret.add(attribute(Messages.TestsSkipped(), count,
-                        "0".equals(count) ? LOZENGE_SUCCESS : LOZENGE_CURRENT, null));
-            }
-            if (!ret.isEmpty()) {
-                ret.add(attribute(Messages.TestReport(), Messages.Here(), null,
-                        TokenMacro.expand(run, null, taskListener, TEST_REPORT_URL_MACRO)));
+            try {
+                String count = TokenMacro.expand(run, null, taskListener, SUCCESS_TEST_COUNT_MACRO);
+                if (StringUtils.isNotEmpty(count)) {
+                    ret.add(attribute(Messages.TestsSuccessful(), count,
+                            "0".equals(count) ? LOZENGE_ERROR : LOZENGE_SUCCESS, null));
+                }
+                count = TokenMacro.expand(run, null, taskListener, FAILED_TEST_COUNT_MACRO);
+                if (StringUtils.isNotEmpty(count)) {
+                    ret.add(attribute(Messages.TestsFailed(), count,
+                            "0".equals(count) ? LOZENGE_SUCCESS : LOZENGE_ERROR, null));
+                }
+                count = TokenMacro.expand(run, null, taskListener, SKIPPED_TEST_COUNT_MACRO);
+                if (StringUtils.isNotEmpty(count)) {
+                    ret.add(attribute(Messages.TestsSkipped(), count,
+                            "0".equals(count) ? LOZENGE_SUCCESS : LOZENGE_CURRENT, null));
+                }
+                if (!ret.isEmpty()) {
+                    ret.add(attribute(Messages.TestReport(), Messages.Here(), null,
+                            TokenMacro.expand(run, null, taskListener, TEST_REPORT_URL_MACRO)));
+                }
+            } catch (MacroEvaluationException mee) {
+                taskListener.getLogger().println(Messages.UnresolvedMacro(mee.getMessage()));
             }
         }
         return ret.isEmpty() ? null : ret;
