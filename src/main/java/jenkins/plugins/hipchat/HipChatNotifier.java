@@ -29,6 +29,7 @@ import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.ListBoxModel.Option;
 import hudson.util.Secret;
+import hudson.util.VersionNumber;
 import jenkins.model.Jenkins;
 import jenkins.plugins.hipchat.exceptions.NotificationException;
 import jenkins.plugins.hipchat.impl.DefaultCardProvider;
@@ -415,6 +416,7 @@ public class HipChatNotifier extends Notifier implements MatrixAggregatable {
         private String sendAs = "Jenkins";
         private String cardProvider = DefaultCardProvider.class.getName();
         private List<NotificationConfig> defaultNotifications;
+        private String configVersion;
         private static int testNotificationCount = 0;
 
         public DescriptorImpl() {
@@ -425,6 +427,9 @@ public class HipChatNotifier extends Notifier implements MatrixAggregatable {
                 } catch (IOException ioe) {
                     logger.log(Level.SEVERE, "Unable to migrate globally stored auth token to a credential", ioe);
                 }
+            }
+            if (Util.fixEmpty(configVersion) == null) {
+                configVersion = "1.0.0";
             }
         }
 
@@ -490,6 +495,14 @@ public class HipChatNotifier extends Notifier implements MatrixAggregatable {
 
         public void setDefaultNotifications(List<NotificationConfig> defaultNotifications) {
             this.defaultNotifications = defaultNotifications;
+        }
+
+        public String getConfigVersion() {
+            return configVersion;
+        }
+
+        public void setConfigVersion(String configVersion) {
+            this.configVersion = configVersion;
         }
 
         /* Default notification messages for UI */

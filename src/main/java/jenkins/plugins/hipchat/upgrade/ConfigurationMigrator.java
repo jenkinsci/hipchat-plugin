@@ -4,9 +4,11 @@ import static jenkins.plugins.hipchat.utils.GuiceUtils.get;
 
 import hudson.BulkChange;
 import hudson.Extension;
+import hudson.Plugin;
 import hudson.Util;
 import hudson.model.AbstractProject;
 import hudson.model.listeners.ItemListener;
+import hudson.util.VersionNumber;
 
 import java.io.IOException;
 import java.util.logging.Level;
@@ -25,8 +27,18 @@ public class ConfigurationMigrator extends ItemListener {
 
     @Override
     public void onLoaded() {
-        HipChatNotifier.DescriptorImpl descriptor = Jenkins.getInstance().getDescriptorByType(DescriptorImpl.class);
-        for (AbstractProject<?, ?> item : Jenkins.getInstance().getAllItems(AbstractProject.class)) {
+        Jenkins jenkins = Jenkins.getInstance();
+        HipChatNotifier.DescriptorImpl descriptor = jenkins.getDescriptorByType(DescriptorImpl.class);
+        Plugin plugin = jenkins.getPlugin("hipchat");
+        if (plugin == null) {
+            return;
+        }
+        VersionNumber pluginVersion = plugin.getWrapper().getVersionNumber();
+        if (pluginVersion.isOlderThan(new VersionNumber(descriptor.getConfigVersion()))) {
+            return;
+        }
+
+        for (AbstractProject<?, ?> item : jenkins.getAllItems(AbstractProject.class)) {
             HipChatNotifier notifier = item.getPublishersList().get(HipChatNotifier.class);
             HipChatJobProperty property = item.getProperty(HipChatJobProperty.class);
             BulkChange bc = new BulkChange(item);
@@ -67,5 +79,7 @@ public class ConfigurationMigrator extends ItemListener {
                 bc.abort();
             }
         }
+        descriptor.setConfigVersion(pluginVersion.toString());
+        descriptor.save();
     }
 }
