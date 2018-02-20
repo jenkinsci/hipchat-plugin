@@ -101,7 +101,7 @@ Note that the following parameters for the hipchatSend step are planned to be de
 
 HipChat supports various kinds of cards for its notifications, as such the card implementation in the Jenkins HipChat plugin has been done in a pluggable manner. In case the out of the box available card implementations do not fit your needs, the following extension will need to be written:
 
-```
+```java
 @Extension
 public class MyCoolCardProvider extends CardProvider {
 
