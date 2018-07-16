@@ -4,6 +4,8 @@ import static jenkins.plugins.hipchat.model.Constants.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
+import hudson.Messages;
+import hudson.Util;
 import hudson.model.AbstractBuild;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -23,7 +25,7 @@ public class BuildDurationMacroTest {
         given(build.getDuration()).willReturn(39000l);
         String result = macro.evaluate(build, null, BUILD_DURATION, null, null);
 
-        assertThat(result).isEqualTo("39 sec");
+        assertThat(result).isEqualTo(Messages.Util_second(39));
     }
 
     @Test
@@ -31,7 +33,7 @@ public class BuildDurationMacroTest {
         given(build.getDuration()).willReturn(0l);
         Whitebox.setInternalState(build, "timestamp", System.currentTimeMillis() - 5000l);
         String result = macro.evaluate(build, null, BUILD_DURATION, null, null);
-
-        assertThat(result).isNotEqualTo("0 ms");
+    
+        assertThat(result).isNotEqualTo(Messages.Util_millisecond(0));
     }
 }
