@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
 import hudson.Messages;
-import hudson.Util;
 import hudson.model.AbstractBuild;
 import org.junit.Test;
 import org.junit.runner.RunWith;
