@@ -17,12 +17,16 @@ import com.cloudbees.plugins.credentials.impl.BaseStandardCredentials;
 import hudson.Util;
 import hudson.model.AbstractProject;
 import hudson.model.Item;
+import hudson.model.Queue.Task;
+import hudson.model.queue.Tasks;
 import hudson.security.ACL;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
 import jenkins.model.Jenkins;
 import jenkins.plugins.hipchat.HipChatNotifier;
 import jenkins.plugins.hipchat.HipChatNotifier.DescriptorImpl;
+
+import org.acegisecurity.Authentication;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 import org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl;
 
@@ -77,15 +81,25 @@ public class CredentialUtils {
     public ListBoxModel getAvailableCredentials(@CheckForNull Item item, String globalCredentialId, String server) {
         String currentValue = getCurrentlySelectedCredentialId(item, globalCredentialId);
         if ((item == null && !Jenkins.getInstance().hasPermission(Jenkins.ADMINISTER))
-                || item != null && !item.hasPermission(Item.EXTENDED_READ)) {
+                || (item != null && !item.hasPermission(Item.EXTENDED_READ)
+                && !item.hasPermission(CredentialsProvider.USE_ITEM))) {
             return new StandardListBoxModel().includeCurrentValue(currentValue);
         }
+
+        if (item != null && !item.hasPermission(Item.CONFIGURE)) {
+            return new StandardListBoxModel().includeCurrentValue(currentValue);
+        }
+
         AbstractIdCredentialsListBoxModel<StandardListBoxModel, StandardCredentials> model = new StandardListBoxModel()
                 .includeEmptyValue();
+        Authentication credentialAuthentication = item instanceof Task ?
+                Tasks.getAuthenticationOf((Task) item) : ACL.SYSTEM;
+
         if (item == null) {
-            model = model.includeAs(ACL.SYSTEM, Jenkins.getInstance(), StringCredentials.class, requirements(server));
+            model = model.includeAs(credentialAuthentication, Jenkins.getInstance(), StringCredentials.class,
+                    requirements(server));
         } else {
-            model = model.includeAs(ACL.SYSTEM, item, StringCredentials.class, requirements(server));
+            model = model.includeAs(credentialAuthentication, item, StringCredentials.class, requirements(server));
         }
         if (currentValue != null) {
             model = model.includeCurrentValue(currentValue);

@@ -40,6 +40,7 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 /**
  * Workflow step to send a HipChat room notification.
@@ -99,7 +100,9 @@ public class HipChatSendStep extends AbstractStepImpl {
             super(HipChatSendStepExecution.class);
         }
 
+        @RequirePOST
         public ListBoxModel doFillCredentialIdItems(@AncestorInPath Item context, @QueryParameter String server) {
+            // permission checks are implemented in CredentialUtils
             return Jenkins.getInstance().getDescriptorByType(HipChatNotifier.DescriptorImpl.class)
                     .doFillCredentialIdItems(context, server);
         }

@@ -49,6 +49,7 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.AncestorInPath;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -541,9 +542,11 @@ public class HipChatNotifier extends Notifier implements MatrixAggregatable {
             return FormValidation.ok();
         }
 
+        @RequirePOST
         public FormValidation doSendTestNotification(@AncestorInPath AbstractProject<?, ?> context,
                 @QueryParameter String server, @QueryParameter String credentialId, @QueryParameter boolean v2Enabled,
                 @QueryParameter String room, @QueryParameter String sendAs) {
+            Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
             StringCredentials credentials = get(CredentialUtils.class).resolveCredential(context, credentialId, server);
             if (credentials == null) {
                 return FormValidation.error(Messages.CredentialMissing(credentialId));
@@ -558,7 +561,9 @@ public class HipChatNotifier extends Notifier implements MatrixAggregatable {
             }
         }
 
+        @RequirePOST
         public ListBoxModel doFillCardProviderItems() {
+            Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
             ExtensionList<CardProvider> providers = ExtensionList.lookup(CardProvider.class);
             List<Option> clazzNames = new ArrayList<>(providers.size());
             for (CardProvider provider : providers) {
@@ -568,7 +573,9 @@ public class HipChatNotifier extends Notifier implements MatrixAggregatable {
             return new ListBoxModel(clazzNames);
         }
 
+        @RequirePOST
         public ListBoxModel doFillCredentialIdItems(@AncestorInPath Item context, @QueryParameter String server) {
+            // permission checks are implemented in CredentialUtils
             return get(CredentialUtils.class).getAvailableCredentials(context, credentialId,
                     Util.fixEmpty(server) == null ? this.server : server);
         }
